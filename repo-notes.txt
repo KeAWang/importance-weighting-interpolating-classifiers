@@ -1,0 +1,26 @@
+# Levels of abstraction
+
+
+Highest:
+- hydra manages work_dir, data_dir, debug, output paths
+- hydra manages configs for each experiment. Each experiment must specify
+    1. trainer settings  # what hardware is used during training, num epochs, etc. basically pytorch lighting Trainers settings (cant be changed)
+    2. model
+    3. optimizer
+    4. datamodule
+    5. callbacks
+    6. logger
+- src/train.py does the following:
+    1. create pytorch lightning trainer
+    2. create datamodule as specified in the config
+    3. call trainer.fit
+    4. call trainer.test
+    5. returns metric score in case of hyperparam optimization
+
+
+# TODO
+Datamodules
+1. Make a Dataset for the truncated Gaussian mixtures
+
+Training
+1. Train recall, precision, accuracy of all classes

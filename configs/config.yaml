@@ -3,15 +3,16 @@
 # specify here default training configuration
 defaults:
     - trainer: default_trainer.yaml
-    - model: mnist_model.yaml
+    - model: imbalanced_classifier_model.yaml
+    - architecture: mlp_net.yaml
     - optimizer: adam.yaml
-    - datamodule: mnist_datamodule.yaml
+    - datamodule: imbalanced_cifar10_datamodule.yaml
     - callbacks: default_callbacks.yaml  # set this to null if you don't want to use callbacks
-    - logger: null  # set logger here or use command line (e.g. `python run.py logger=wandb`)
+    - logger: wandb # set logger here or use command line (e.g. `python run.py logger=wandb`)
 
     # enable color logging
-    # - override hydra/hydra_logging: colorlog
-    # - override hydra/job_logging: colorlog
+    #- override hydra/hydra_logging: colorlog
+    #- override hydra/job_logging: colorlog
 
 
 # path to original working directory

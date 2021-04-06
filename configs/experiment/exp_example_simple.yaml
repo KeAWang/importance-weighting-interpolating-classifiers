@@ -5,11 +5,14 @@
 
 defaults:
     - override /trainer: default_trainer.yaml           # choose trainer from 'configs/trainer/' folder or set to null
-    - override /model: mnist_model.yaml                 # choose model from 'configs/model/' folder or set to null
-    - override /optimizer: adam.yaml                    # choose model from 'configs/model/' folder or set to null
-    - override /datamodule: mnist_datamodule.yaml       # choose datamodule from 'configs/datamodule/' folder or set to null
+    - override /model: imbalanced_classifier_model.yaml                 # choose model from 'configs/model/' folder or set to null
+    - override /architecture: mlp_net.yaml                 # choose model from 'configs/architecture/' folder or set to null
+    - override /optimizer: adam.yaml                    # choose model from 'configs/optimizer/' folder or set to null
+    - override /datamodule: imbalanced_cifar10_datamodule.yaml       # choose datamodule from 'configs/datamodule/' folder or set to null
     - override /callbacks: default_callbacks.yaml       # choose callback set from 'configs/callbacks/' folder or set to null
-    - override /logger: null                            # choose logger from 'configs/logger/' folder or set to null
+    - override /logger: wandb.yaml # choose logger from 'configs/logger/' folder or set to null
+    #- override /logger: null # choose logger from 'configs/logger/' folder or set to null
+
 
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
@@ -19,16 +22,24 @@ seed: 12345
 trainer:
     min_epochs: 1
     max_epochs: 10
-    gradient_clip_val: 0.5
 
 model:
-    lin1_size: 128
-    lin2_size: 256
-    lin3_size: 64
+    reweight: True
+
+architecture:
+    num_layers: 2
+    hidden_size: 100
 
 optimizer:
     lr: 0.001
 
 datamodule:
     batch_size: 64
-    train_val_test_split: [55_000, 5_000, 10_000]
+    num_workers: 4  # Set to 0 for debugging
+    pin_memory: True
+    flatten_input: True
+    #desired_classes: [3, 5]  # Warning: Must always be in increasing order because we convert to a set
+    #num_undersample_per_train_class: [5000, 5000]
+    #num_oversample_per_train_class: [5000, 5000]
+    #num_undersample_per_test_class: [1000, 1000]
+    #num_oversample_per_test_class: [1000, 1000]

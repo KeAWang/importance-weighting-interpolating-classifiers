@@ -144,3 +144,5 @@ dmypy.json
 data/
 logs/
 wandb/
+notebooks/*.pdf
+notebooks/*.png

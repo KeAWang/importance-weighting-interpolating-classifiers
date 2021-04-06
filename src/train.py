@@ -1,5 +1,6 @@
 import logging
 from typing import List, Optional
+import torch
 
 from pytorch_lightning import LightningModule, LightningDataModule, Callback, Trainer
 from pytorch_lightning.loggers import LightningLoggerBase
@@ -32,10 +33,30 @@ def train(config: DictConfig) -> Optional[float]:
     log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
 
+    # Compute class weights if required
+    train_dataset = datamodule.prepare_train_dataset()
+    # TODO: make sure this is on the right device
+    class_weights: Optional[torch.Tensor] = (
+        torch.tensor(train_dataset.class_weights, dtype=torch.get_default_dtype())
+        if config.model.reweight
+        else None
+    )
+
+    input_size = datamodule.size()
+    output_size = datamodule.num_classes
+    # Init function approximator
+    architecture: torch.nn.Module = hydra.utils.instantiate(
+        config.architecture, input_size=input_size, output_size=output_size
+    )
+
     # Init Lightning model
     log.info(f"Instantiating model <{config.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(
-        config.model, optimizer=config.optimizer, _recursive_=False
+        config.model,
+        architecture=architecture,
+        class_weights=class_weights,
+        optimizer=config.optimizer,
+        _recursive_=False,
     )
 
     # Init Lightning callbacks
@@ -76,9 +97,10 @@ def train(config: DictConfig) -> Optional[float]:
     trainer.fit(model=model, datamodule=datamodule)
 
     # Evaluate model on test set after training
-    if not config.trainer.get("fast_dev_run"):
-        log.info("Starting testing!")
-        trainer.test()
+    # TODO: what does .get do?
+    # if not config.trainer.get("fast_dev_run"):
+    #    log.info("Starting testing!")
+    #    trainer.test()
 
     # Make sure everything closed properly
     log.info("Finalizing!")

@@ -1,0 +1,35 @@
+_target_: src.pl_datamodules.imbalanced_datamodule.ImbalancedCIFAR10DataModule
+
+# CIFAR10 class labels:
+# 0 : airplane
+# 1 : automobile
+# 2 : bird
+# 3 : cat
+# 4 : deer
+# 5 : dog
+# 6 : frog
+# 7 : horse
+# 8 : ship
+# 9 : truck
+#
+# CIFAR10 classes are balanced, with 5000 examples per class in the train set
+# and 1000 examples per class in the test set
+
+#desired_classes: [3, 5]  # Warning: Must always be in increasing order because we convert to a set
+desired_classes: null  # null indicates we want every class
+
+# Entries must correspond to entries of desired_classes sorted in increasing order
+#num_undersample_per_train_class: [5000, 5000]
+#num_oversample_per_train_class: [5000, 5000]
+#num_undersample_per_test_class: [1000, 1000]
+#num_oversample_per_test_class: [1000, 1000]
+num_undersample_per_train_class: null
+num_oversample_per_train_class: null
+num_undersample_per_test_class: null
+num_oversample_per_test_class: null
+
+flatten_input: False
+data_dir: ${data_dir}  # data_dir is specified in config.yaml
+batch_size: 64
+num_workers: 0
+pin_memory: False
