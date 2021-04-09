@@ -30,6 +30,6 @@ num_oversample_per_test_class: null
 
 flatten_input: False
 data_dir: ${data_dir}  # data_dir is specified in config.yaml
-batch_size: 64
+batch_size: 16
 num_workers: 0
 pin_memory: False

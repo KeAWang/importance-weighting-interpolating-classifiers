@@ -9,4 +9,4 @@ max_epochs: 1000
 weights_summary: null
 progress_bar_refresh_rate: 10
 
-terminate_on_nan: False
+terminate_on_nan: True

@@ -53,7 +53,7 @@ class ImbalancedClassifierModel(LightningModule):
         x, y = batch
         logits = self.forward(x)
         loss = self.criterion(logits, y)
-        preds = torch.argmax(logits, dim=1)
+        preds = torch.argmax(logits, dim=-1)
         return loss, preds, y
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
@@ -81,13 +81,21 @@ class ImbalancedClassifierModel(LightningModule):
 
     def validation_step(self, batch: Any, batch_idx: int):
         loss, preds, targets = self.step(batch)
+        num_examples = len(targets)
+        num_pos_pred = (preds == 1).sum().item()
 
         # log val metrics
         acc = self.val_accuracy(preds, targets)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
         self.log("val/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
 
-        return {"loss": loss, "preds": preds, "targets": targets}
+        return {
+            "loss": loss,
+            "preds": preds,
+            "targets": targets,
+            "num_examples": num_examples,
+            "num_pos_pred": num_pos_pred,
+        }
 
     def validation_epoch_end(self, outputs: List[Any]):
         # log best so far val acc and val loss
@@ -95,3 +103,8 @@ class ImbalancedClassifierModel(LightningModule):
         self.metric_hist["val/loss"].append(self.trainer.callback_metrics["val/loss"])
         self.log("val/acc_best", max(self.metric_hist["val/acc"]), prog_bar=False)
         self.log("val/loss_best", min(self.metric_hist["val/loss"]), prog_bar=False)
+
+        num_examples = sum([o["num_examples"] for o in outputs])
+        num_pos_pred = sum([o["num_pos_pred"] for o in outputs])
+        frac_predicted_pos = num_pos_pred / num_examples
+        self.log("val/frac_predicted_pos", frac_predicted_pos, prog_bar=False)

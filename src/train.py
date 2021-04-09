@@ -38,9 +38,13 @@ def train(config: DictConfig) -> Optional[float]:
     # TODO: make sure this is on the right device
     class_weights: Optional[torch.Tensor] = (
         torch.tensor(train_dataset.class_weights, dtype=torch.get_default_dtype())
-        if config.model.reweight
+        if config.model.reweigh
         else None
     )
+    if class_weights is None:
+        log.info(f"Not using class_weights")
+    else:
+        log.info(f"Using class_weights: {class_weights.tolist()}")
 
     input_size = datamodule.size()
     output_size = datamodule.num_classes

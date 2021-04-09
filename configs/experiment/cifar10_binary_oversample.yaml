@@ -1,0 +1,43 @@
+# @package _global_
+
+# to execute this experiment run:
+# python run.py +experiment=cifar10_binary_reweigh
+
+defaults:
+    - override /trainer: default_trainer.yaml           # choose trainer from 'configs/trainer/' folder or set to null
+    - override /model: imbalanced_classifier_model.yaml                 # choose model from 'configs/model/' folder or set to null
+    - override /architecture: conv_net.yaml                 # choose model from 'configs/architecture/' folder or set to null
+    - override /optimizer: sgd.yaml                    # choose model from 'configs/optimizer/' folder or set to null
+    - override /datamodule: imbalanced_cifar10_datamodule.yaml       # choose datamodule from 'configs/datamodule/' folder or set to null
+    - override /callbacks: default_callbacks.yaml       # choose callback set from 'configs/callbacks/' folder or set to null
+    - override /logger: wandb.yaml # choose logger from 'configs/logger/' folder or set to null
+
+
+trainer:
+    min_epochs: 1
+    max_epochs: 1000
+
+model:
+    reweigh: False
+
+#architecture:
+#    num_layers: 2
+#    hidden_size: 100
+
+optimizer:
+    lr: 0.1
+
+datamodule:
+    batch_size: 16
+    num_workers: 4  # Set to 0 for debugging
+    pin_memory: True
+    flatten_input: False
+    desired_classes: [3, 5]  # Warning: Must always be in increasing order because we convert to a set
+    num_undersample_per_train_class: null
+    num_oversample_per_train_class: null
+    num_undersample_per_test_class: [1000, 1000]
+    num_oversample_per_test_class: [1000, 1000]
+
+logger:
+    wandb:
+        tags: ["binary", "oversample", "cifar10"]

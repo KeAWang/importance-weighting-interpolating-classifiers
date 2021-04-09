@@ -17,8 +17,6 @@ defaults:
 # all parameters below will be merged with parameters from default configurations set above
 # this allows you to overwrite only specified parameters
 
-seed: 12345
-
 trainer:
     min_epochs: 1
     max_epochs: 10
@@ -34,7 +32,7 @@ optimizer:
     lr: 0.001
 
 datamodule:
-    batch_size: 64
+    batch_size: 16
     num_workers: 4  # Set to 0 for debugging
     pin_memory: True
     flatten_input: True

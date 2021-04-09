@@ -71,7 +71,7 @@ class BaseDataModule(LightningDataModule):
 
 
 class ImbalancedCIFAR10DataModule(BaseDataModule):
-    dims = (32, 32, 3)
+    dims = (3, 32, 32)
 
     def __init__(
         self,
@@ -159,4 +159,4 @@ class ImbalancedCIFAR10DataModule(BaseDataModule):
         # get only datapoints that belong to classes
         self.train_dataset = self.prepare_train_dataset()
         self.val_dataset = self.prepare_val_dataset()
-        # TODO: need validation set?
+        # TODO: don't validate on test set?

@@ -115,7 +115,7 @@ class ImbalancedCIFAR10(VisionDataset, ImbalancedDatasetMixin):
         targets = self.remap_labels(targets, desired_classes)
 
         self.data = inputs
-        self.train = targets
+        self.targets = targets
         self.class_weights = self.compute_weights(targets)
 
         self._load_meta()

@@ -1,3 +1,3 @@
 _target_: src.architectures.simple_models.LinearNet
-#input_size: null
-#output_size: null
+input_size: null
+output_size: null

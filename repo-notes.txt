@@ -21,6 +21,22 @@ Highest:
 # TODO
 Datamodules
 1. Make a Dataset for the truncated Gaussian mixtures
+2. Remove defaults in every config. Refactor config.yaml and experiments/*.yaml
+so that every experiment is given by a different yaml file
 
 Training
 1. Train recall, precision, accuracy of all classes
+2. Maybe I should fix the total number of samples and then divide them that way?
+3. Terminate on nan!!!
+
+Testing
+1. Validate with different classes than train classes
+
+Logging
+
+
+Done.
+Don't save weights to wandb 
+Log the seed for the experiments
+Make wandb log the logdir for each experiment.
+Right now, only settings passed to pytorch lightning are saved in wandb config, i.e. model, optimizer, datamodule, callbacks, trainer. Want to also save seed, work_dir, data_dir, debug, seed, etc.

@@ -3,6 +3,8 @@ from collections.abc import Iterable
 from typing import Union
 import torch
 from torch.nn import Linear, Sequential
+from torch import nn
+import torch.nn.functional as F
 
 
 Size = Union[int, tuple]
@@ -35,7 +37,7 @@ class MLPNet(Sequential):
     Args:
         input_size: dimensionality of inputs
         hidden_size: dimensionality of hidden layers
-        output_size: dimensionality of final output
+        output_size: dimensionality of final output, usually the number of classes
         num_layers: number of hidden layers. 0 corresponds to a linear network
         activation: the string name of a torch.nn activation function
     """
@@ -73,3 +75,36 @@ class MLPNet(Sequential):
                 )
         modules = OrderedDict(modules)
         super().__init__(modules)
+
+
+class ConvNet(Sequential):
+    """Same architecture as Byrd & Lipton 2017 on CIFAR10
+    Args:
+        output_size: dimensionality of final output, usually the number of classes
+    """
+
+    input_size = (3, 32, 32)
+
+    def __init__(self, input_size, output_size):
+       assert tuple(input_size) == self.input_size
+       layers = [
+           torch.nn.Conv2d(3, 64, 3),
+           torch.nn.ReLU(),
+           torch.nn.Conv2d(64, 64, 3),
+           torch.nn.ReLU(),
+           torch.nn.MaxPool2d(2),
+           torch.nn.Conv2d(64, 128, 3),
+           torch.nn.ReLU(),
+           torch.nn.Conv2d(128, 128, 3),
+           torch.nn.ReLU(),
+           torch.nn.Conv2d(128, 128, 3),
+           torch.nn.ReLU(),
+           torch.nn.MaxPool2d(2),
+           torch.nn.Flatten(),
+           torch.nn.Linear(2048, 512),
+           torch.nn.ReLU(),
+           torch.nn.Linear(512, 128),
+           torch.nn.ReLU(),
+           torch.nn.Linear(128, output_size),
+       ]
+       super().__init__(*layers)

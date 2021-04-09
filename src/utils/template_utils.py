@@ -56,6 +56,10 @@ def extras(config: DictConfig) -> None:
             config.trainer.gpus = 0
         if config.datamodule.get("num_workers"):
             config.datamodule.num_workers = 0
+        if config.get("logger"):
+            del config["logger"]
+
+        # TODO: turn off checkpointing
 
     # Disable adding new keys to config
     OmegaConf.set_struct(config, True)
@@ -129,6 +133,13 @@ def log_hyperparameters(
     hparams["model"] = config["model"]
     hparams["optimizer"] = config["optimizer"]
     hparams["datamodule"] = config["datamodule"]
+    hparams["seed"] = config["seed"]
+    hparams["debug"] = config["debug"]
+    hparams["architecture"] = config["architecture"]
+    hparams["data_dir"] = config["data_dir"]
+    import os
+
+    hparams["run_dir"] = os.getcwd()  # will output what is set under hydra.run.dir
     if "callbacks" in config:
         hparams["callbacks"] = config["callbacks"]
 

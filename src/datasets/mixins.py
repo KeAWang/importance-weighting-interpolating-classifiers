@@ -40,6 +40,7 @@ class ImbalancedDatasetMixin:
         num_undersample_per_class: List[int],
         num_oversample_per_class: List[int],
     ):
+        # TODO: handle when num*sample is None
         num_undersample_per_class = dict(
             zip(desired_classes, num_undersample_per_class)
         )
