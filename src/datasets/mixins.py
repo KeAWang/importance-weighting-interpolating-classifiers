@@ -73,9 +73,9 @@ class ImbalancedDatasetMixin:
                 0,
                 len(cls_idx),
                 (num_remaining,),
-                generator=torch.Generator().manual_seed(
-                    34028
-                ),  # always use same seed for oversampling. 34028 is randomly chosen
+                # generator=torch.Generator().manual_seed(
+                #    34028
+                # ),  # always use same seed for oversampling. 34028 is randomly chosen
             ).numpy()
             additional_idx = cls_idx[additional_idx]
             cls_idx = np.concatenate([cls_idx, additional_idx])
