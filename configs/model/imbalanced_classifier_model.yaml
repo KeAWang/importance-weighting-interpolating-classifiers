@@ -1,1 +1,2 @@
 _target_: src.pl_models.imbalanced_classifier_model.ImbalancedClassifierModel
+class_weights: null

@@ -7,7 +7,7 @@ defaults:
     - architecture: mlp_net.yaml
     - optimizer: adam.yaml
     - datamodule: imbalanced_cifar10_datamodule.yaml
-    - callbacks: default_callbacks.yaml  # set this to null if you don't want to use callbacks
+    - callbacks: wandb_callbacks.yaml  # set this to null if you don't want to use callbacks
     - logger: wandb # set logger here or use command line (e.g. `python run.py logger=wandb`)
 
     # enable color logging

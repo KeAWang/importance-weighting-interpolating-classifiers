@@ -34,17 +34,11 @@ def train(config: DictConfig) -> Optional[float]:
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
 
     # Compute class weights if required
-    train_dataset = datamodule.prepare_train_dataset()
-    # TODO: make sure this is on the right device
-    class_weights: Optional[torch.Tensor] = (
-        torch.tensor(train_dataset.class_weights, dtype=torch.get_default_dtype())
-        if config.model.reweigh
+    class_weights = (
+        torch.tensor(config.model["class_weights"], dtype=torch.get_default_dtype())
+        if config.model.get("class_weights")
         else None
     )
-    if class_weights is None:
-        log.info(f"Not using class_weights")
-    else:
-        log.info(f"Using class_weights: {class_weights.tolist()}")
 
     input_size = datamodule.size()
     output_size = datamodule.num_classes

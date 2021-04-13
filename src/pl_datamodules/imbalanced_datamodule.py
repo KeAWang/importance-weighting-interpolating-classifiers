@@ -27,7 +27,6 @@ class BaseDataModule(LightningDataModule):
         num_workers: int,
         pin_memory: bool,
         data_dir: str = "data/",
-        **kwargs,
     ):
         super().__init__()
 

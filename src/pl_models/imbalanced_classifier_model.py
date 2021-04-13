@@ -13,7 +13,6 @@ class ImbalancedClassifierModel(LightningModule):
         architecture: torch.nn.Module,
         class_weights: torch.Tensor,
         optimizer: torch.optim.Optimizer,
-        **kwargs
     ):
         super().__init__()
 
