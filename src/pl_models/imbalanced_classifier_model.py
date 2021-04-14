@@ -13,8 +13,10 @@ class ImbalancedClassifierModel(LightningModule):
         architecture: torch.nn.Module,
         class_weights: torch.Tensor,
         optimizer: torch.optim.Optimizer,
+        **unused_kwargs,
     ):
         super().__init__()
+        print(f"{self.__class__} initialized with unused kwargs {unused_kwargs.keys()}")
 
         # this line ensures params passed to LightningModule will be saved to ckpt
         # it also allows to access params with 'self.hparams' attribute
