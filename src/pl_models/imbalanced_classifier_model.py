@@ -16,7 +16,9 @@ class ImbalancedClassifierModel(LightningModule):
         **unused_kwargs,
     ):
         super().__init__()
-        print(f"{self.__class__} initialized with unused kwargs {unused_kwargs.keys()}")
+        print(
+            f"{self.__class__} initialized with unused kwargs: {list(unused_kwargs.keys())}"
+        )
 
         # this line ensures params passed to LightningModule will be saved to ckpt
         # it also allows to access params with 'self.hparams' attribute
@@ -50,7 +52,7 @@ class ImbalancedClassifierModel(LightningModule):
     def forward(self, x) -> torch.Tensor:
         return self.architecture(x)
 
-    def step(self, batch) -> Dict[str, torch.Tensor]:
+    def step(self, batch):
         x, y = batch
         logits = self.forward(x)
         loss = self.criterion(logits, y)
