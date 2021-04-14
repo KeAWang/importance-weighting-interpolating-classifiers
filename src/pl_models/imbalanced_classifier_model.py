@@ -57,10 +57,10 @@ class ImbalancedClassifierModel(LightningModule):
         logits = self.forward(x)
         loss = self.criterion(logits, y)
         preds = torch.argmax(logits, dim=-1)
-        return loss, preds, y
+        return loss, logits, preds, y
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
-        loss, preds, targets = self.step(batch)
+        loss, _, preds, targets = self.step(batch)
 
         # log train metrics
         acc = self.train_accuracy(preds, targets)
@@ -83,7 +83,7 @@ class ImbalancedClassifierModel(LightningModule):
         self.log("train/loss_best", min(self.metric_hist["train/loss"]), prog_bar=False)
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, preds, targets = self.step(batch)
+        loss, _, preds, targets = self.step(batch)
         num_examples = len(targets)
         num_pos_pred = (preds == 1).sum().item()
 
