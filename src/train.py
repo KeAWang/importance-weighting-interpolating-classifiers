@@ -9,28 +9,33 @@ from pytorch_lightning import seed_everything
 import hydra
 from omegaconf import DictConfig
 
+from dataclasses import dataclass
 from src.utils import template_utils
 
 log = logging.getLogger(__name__)
 
 
-def train(config: DictConfig) -> Optional[float]:
-    """Contains training pipeline.
-    Instantiates all PyTorch Lightning objects from config.
+@dataclass
+class HydraObjects:
+    """Class for keeping track of objectes to initialize using hydra"""
 
-    Args:
-        config (DictConfig): Configuration composed by Hydra.
+    datamodule: LightningDataModule
+    architecture: torch.nn.Module
+    model: LightningModule
+    callbacks: List[Callback]
+    logger: List[LightningLoggerBase]
+    trainer: Trainer
 
-    Returns:
-        Optional[float]: Metric score for hyperparameter optimization.
+
+def hydra_init(config: DictConfig, train=True) -> HydraObjects:
+    """ Initialize the objects from a hydra config.
+
+    We log only when `train` is True.
+
     """
-
-    # Set seed for random number generators in pytorch, numpy and python.random
-    if "seed" in config:
-        seed_everything(config.seed)
-
     # Init Lightning datamodule
-    log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
+    if train:
+        log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
 
     # Compute class weights if required
@@ -48,7 +53,8 @@ def train(config: DictConfig) -> Optional[float]:
     )
 
     # Init Lightning model
-    log.info(f"Instantiating model <{config.model._target_}>")
+    if train:
+        log.info(f"Instantiating model <{config.model._target_}>")
     model: LightningModule = hydra.utils.instantiate(
         config.model,
         architecture=architecture,
@@ -57,27 +63,66 @@ def train(config: DictConfig) -> Optional[float]:
         _recursive_=False,
     )
 
-    # Init Lightning callbacks
-    callbacks: List[Callback] = []
-    if "callbacks" in config:
-        for _, cb_conf in config["callbacks"].items():
-            if "_target_" in cb_conf:
-                log.info(f"Instantiating callback <{cb_conf._target_}>")
-                callbacks.append(hydra.utils.instantiate(cb_conf))
+    if train:
+        # Init Lightning callbacks
+        callbacks: List[Callback] = []
+        if "callbacks" in config:
+            for _, cb_conf in config["callbacks"].items():
+                if "_target_" in cb_conf:
+                    log.info(f"Instantiating callback <{cb_conf._target_}>")
+                    callbacks.append(hydra.utils.instantiate(cb_conf))
+    else:
+        callbacks = []
 
     # Init Lightning loggers
-    logger: List[LightningLoggerBase] = []
-    if "logger" in config:
-        for _, lg_conf in config["logger"].items():
-            if "_target_" in lg_conf:
-                log.info(f"Instantiating logger <{lg_conf._target_}>")
-                logger.append(hydra.utils.instantiate(lg_conf))
+    if train:
+        logger: List[LightningLoggerBase] = []
+        if "logger" in config:
+            for _, lg_conf in config["logger"].items():
+                if "_target_" in lg_conf:
+                    log.info(f"Instantiating logger <{lg_conf._target_}>")
+                    logger.append(hydra.utils.instantiate(lg_conf))
+    else:
+        logger = []
 
     # Init Lightning trainer
-    log.info(f"Instantiating trainer <{config.trainer._target_}>")
+    if train:
+        log.info(f"Instantiating trainer <{config.trainer._target_}>")
     trainer: Trainer = hydra.utils.instantiate(
         config.trainer, callbacks=callbacks, logger=logger, _convert_="partial"
     )
+
+    return HydraObjects(
+        datamodule=datamodule,
+        architecture=architecture,
+        model=model,
+        callbacks=callbacks,
+        logger=logger,
+        trainer=trainer,
+    )
+
+
+def train(config: DictConfig) -> Optional[float]:
+    """Contains training pipeline.
+    Instantiates all PyTorch Lightning objects from config.
+
+    Args:
+        config (DictConfig): Configuration composed by Hydra.
+
+    Returns:
+        Optional[float]: Metric score for hyperparameter optimization.
+    """
+
+    # Set seed for random number generators in pytorch, numpy and python.random
+    if "seed" in config:
+        seed_everything(config.seed)
+
+    hydra_objects = hydra_init(config)
+    model = hydra_objects.model
+    datamodule = hydra_objects.datamodule
+    trainer = hydra_objects.trainer
+    callbacks = hydra_objects.callbacks
+    logger = hydra_objects.logger
 
     # Send some parameters from config to all lightning loggers
     log.info("Logging hyperparameters!")
