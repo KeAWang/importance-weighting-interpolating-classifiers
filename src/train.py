@@ -141,7 +141,6 @@ def train(config: DictConfig) -> Optional[float]:
     trainer.fit(model=model, datamodule=datamodule)
 
     # Evaluate model on test set after training
-    # TODO: what does .get do?
     # if not config.trainer.get("fast_dev_run"):
     #    log.info("Starting testing!")
     #    trainer.test()

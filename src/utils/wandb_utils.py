@@ -45,3 +45,19 @@ def get_config(user="", project="", query={}):
 
     configs = [(run.name, run.config) for run in runs]
     return configs
+
+
+def config_to_omegaconf(config: dict):
+    from omegaconf import OmegaConf
+
+    keys, values = zip(*config.items())
+
+    # convert from keys that look like "datamodules/batch_size" into "datamodules.batch_size"
+    dot_keys = [key.replace("/", ".") for key in keys]
+
+    # convert "None" strings into "null" for OmegaConf to parse it as a None object
+    new_values = ["null" if v == "None" else v for v in values]
+
+    dot_list = [f"{k}={v}" for k, v in zip(dot_keys, new_values)]
+    omega_conf = OmegaConf.from_dotlist(dot_list)
+    return omega_conf
