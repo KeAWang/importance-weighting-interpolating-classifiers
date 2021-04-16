@@ -65,7 +65,7 @@ class ImbalancedClassifierModel(LightningModule):
         return loss, logits, preds, y
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
-        loss, _, preds, targets = self.step(batch)
+        loss, logits, preds, targets = self.step(batch)
 
         # log train metrics
         acc = self.train_accuracy(preds, targets)
@@ -75,7 +75,7 @@ class ImbalancedClassifierModel(LightningModule):
         # we can return here dict with any tensors
         # and then read it in some callback or in training_epoch_end() below
         # remember to always return loss from training_step, or else backpropagation will fail!
-        return {"loss": loss, "preds": preds, "targets": targets}
+        return {"loss": loss, "logits": logits, "preds": preds, "targets": targets}
 
     # [OPTIONAL METHOD]
     def training_epoch_end(self, outputs: List[Any]) -> None:
@@ -88,7 +88,7 @@ class ImbalancedClassifierModel(LightningModule):
         self.log("train/loss_best", min(self.metric_hist["train/loss"]), prog_bar=False)
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, _, preds, targets = self.step(batch)
+        loss, logits, preds, targets = self.step(batch)
         num_examples = len(targets)
         num_pos_pred = (preds == 1).sum().item()
 
@@ -99,6 +99,7 @@ class ImbalancedClassifierModel(LightningModule):
 
         return {
             "loss": loss,
+            "logits": logits,
             "preds": preds,
             "targets": targets,
             "num_examples": num_examples,
