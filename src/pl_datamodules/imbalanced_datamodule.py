@@ -93,14 +93,30 @@ class ImbalancedCIFAR10DataModule(BaseDataModule):
             else list(range(10))
         )
 
-        if num_undersample_per_train_class is None:
+        if (
+            num_undersample_per_train_class is None
+            and num_oversample_per_train_class is None
+        ):
             num_undersample_per_train_class = [5000] * len(desired_classes)
-        if num_oversample_per_train_class is None:
             num_oversample_per_train_class = [5000] * len(desired_classes)
-        if num_undersample_per_test_class is None:
+        if (
+            num_undersample_per_train_class is not None
+            and num_oversample_per_train_class is None
+        ):
+            num_oversample_per_train_class = list(num_undersample_per_train_class)
+
+        if (
+            num_undersample_per_test_class is None
+            and num_oversample_per_test_class is None
+        ):
             num_undersample_per_test_class = [1000] * len(desired_classes)
-        if num_oversample_per_test_class is None:
             num_oversample_per_test_class = [1000] * len(desired_classes)
+
+        if (
+            num_undersample_per_test_class is not None
+            and num_oversample_per_test_class is None
+        ):
+            num_oversample_per_test_class = list(num_undersample_per_test_class)
 
         self.num_classes = len(desired_classes)
         self.desired_classes = desired_classes
