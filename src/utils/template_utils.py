@@ -19,6 +19,7 @@ def extras(config: DictConfig) -> None:
         - disabling lightning logs
         - easier access to debug mode
         - forcing debug friendly configuration
+        - append additional logger.extra_tags to wandb.tags
     Args:
         config (DictConfig): [description]
     """
@@ -56,10 +57,23 @@ def extras(config: DictConfig) -> None:
             config.trainer.gpus = 0
         if config.datamodule.get("num_workers"):
             config.datamodule.num_workers = 0
+
         if config.get("logger"):
             del config["logger"]
+        # Prevent trying to use Wandb callbacks now that we unset the logger
+        if config.get("callbacks"):
+            del config["callbacks"]
 
         # TODO: turn off checkpointing
+
+    # Append extra_tags to wandb tags. Extra_tags can now be specified in commandline
+    # without overwriting old tags
+    if (
+        config.get("logger")
+        and config.logger.get("extra_tags")
+        and config.logger.get("wandb")
+    ):
+        config.logger.wandb.tags += config.logger.extra_tags
 
     # Disable adding new keys to config
     OmegaConf.set_struct(config, True)

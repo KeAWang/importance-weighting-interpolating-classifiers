@@ -1,5 +1,5 @@
 # https://wandb.ai (Weights&Biases)
-
+extra_tags: null  # extra tags that can be appended from commmandline
 wandb:
     _target_: pytorch_lightning.loggers.wandb.WandbLogger
     project: importance-reweighing
