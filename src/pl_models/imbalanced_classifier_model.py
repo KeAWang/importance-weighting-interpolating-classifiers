@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, Sequence, Tuple, Union
+from typing import Any, Dict, List, Sequence, Tuple, Union, Optional
 
 import hydra
 import torch
@@ -15,6 +15,7 @@ class ImbalancedClassifierModel(LightningModule):
         class_weights: torch.Tensor,
         optimizer: DictConfig,
         freeze_features: bool,
+        ckpt_path: Optional[str],
         **unused_kwargs,
     ):
         super().__init__()
@@ -27,12 +28,20 @@ class ImbalancedClassifierModel(LightningModule):
         self.save_hyperparameters()
 
         self.architecture = architecture
-        if freeze_features:
-            set_grad(self.architecture, requires_grad=False)
-            set_grad(self.architecture.linear_output, requires_grad=True)
 
         self.register_buffer("class_weights", class_weights)
         self.criterion = torch.nn.CrossEntropyLoss(weight=self.class_weights)
+
+        # Load weights if needed
+        if ckpt_path is not None:
+            ckpt = torch.load(ckpt_path)
+            self.load_state_dict(ckpt["state_dict"])
+
+        if freeze_features:
+            set_grad(self.architecture, requires_grad=False)
+            set_grad(self.architecture.linear_output, requires_grad=True)
+        else:
+            set_grad(self.architecture, requires_grad=True)
 
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch

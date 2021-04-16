@@ -25,6 +25,9 @@ work_dir: ${hydra:runtime.cwd}
 # path to folder with data
 data_dir: ${work_dir}/data/
 
+# wandb run to load checkpoint from. Must be [user, project, run_name, ckpt_name]
+load_wandb_run: null
+
 # use `python run.py debug=true` for easy debugging!
 # this will run 1 train, val and test loop with only 1 batch
 # equivalent to running `python run.py trainer.fast_dev_run=true`

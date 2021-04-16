@@ -3,20 +3,18 @@ import os
 import pickle
 
 
-def get_history(user="", project="", query={},
-                **kwargs):
+def get_history(user="", project="", query={}, **kwargs):
     api = wandb.Api()
     runs = api.runs(path=f"{user}/{project}", filters=query)
     dataframes = [run.history(**kwargs) for run in runs]
     return list(zip(runs, dataframes))
 
 
-def download_files(user="", project="",
-                   query={}, save_dir=".", **kwargs):
+def download_files(user="", project="", query={}, save_dir=".", **kwargs):
     """
     Download the files of each run into a new directory for the run.
     Also saves the config dict of the run.
-     
+
     See https://docs.wandb.com/library/reference/wandb_api for how to write queries
     """
     if not os.path.isdir(save_dir):

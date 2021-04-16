@@ -1,5 +1,6 @@
 import logging
 import warnings
+import os
 from typing import List, Sequence
 
 import pytorch_lightning as pl
@@ -9,6 +10,7 @@ from pytorch_lightning.loggers.wandb import WandbLogger
 from rich import print
 from rich.syntax import Syntax
 from rich.tree import Tree
+from .wandb_utils import get_config
 
 log = logging.getLogger(__name__)
 
@@ -74,6 +76,16 @@ def extras(config: DictConfig) -> None:
         and config.logger.get("wandb")
     ):
         config.logger.wandb.tags += config.logger.extra_tags
+
+    if config.get("load_wandb_run"):
+        user, project, run_name, ckpt_name = config["load_wandb_run"]
+        query = {"displayName": {"$eq": run_name}}
+        _, prev_config = get_config(user=user, project=project, query=query)[0]
+        run_dir = prev_config["run_dir"]
+        ckpt_path = f"{run_dir}/checkpoints/{ckpt_name}"  # Note: update to correct directory structure if it changes
+        if not os.path.exists(ckpt_path):
+            raise ValueError(f"Desired checkpoint path {ckpt_path} does not exist!")
+        config.model["ckpt_path"] = ckpt_path
 
     # Disable adding new keys to config
     OmegaConf.set_struct(config, True)

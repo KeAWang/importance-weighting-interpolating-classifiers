@@ -1,5 +1,6 @@
 import logging
 from typing import List, Optional
+import os
 import torch
 
 from pytorch_lightning import LightningModule, LightningDataModule, Callback, Trainer
@@ -38,18 +39,18 @@ def hydra_init(config: DictConfig, train=True) -> HydraObjects:
         log.info(f"Instantiating datamodule <{config.datamodule._target_}>")
     datamodule: LightningDataModule = hydra.utils.instantiate(config.datamodule)
 
-    # Compute class weights if required
-    class_weights = (
-        torch.tensor(config.model["class_weights"], dtype=torch.get_default_dtype())
-        if config.model.get("class_weights")
-        else None
-    )
-
     input_size = datamodule.size()
     output_size = datamodule.num_classes
     # Init function approximator
     architecture: torch.nn.Module = hydra.utils.instantiate(
         config.architecture, input_size=input_size, output_size=output_size
+    )
+
+    # Compute class weights if required
+    class_weights = (
+        torch.tensor(config.model["class_weights"], dtype=torch.get_default_dtype())
+        if config.model.get("class_weights")
+        else torch.ones((output_size,), dtype=torch.get_default_dtype())
     )
 
     # Init Lightning model
@@ -91,12 +92,6 @@ def hydra_init(config: DictConfig, train=True) -> HydraObjects:
     trainer: Trainer = hydra.utils.instantiate(
         config.trainer, callbacks=callbacks, logger=logger, _convert_="partial"
     )
-
-    # Load weights if needed
-    if config.get("ckpt_path"):
-        ckpt_path = config["ckpt_path"]
-        ckpt = torch.load(ckpt_path)
-        model.load_state_dict(ckpt["state_dict"])
 
     return HydraObjects(
         datamodule=datamodule,
