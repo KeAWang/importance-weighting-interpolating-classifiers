@@ -92,6 +92,12 @@ def hydra_init(config: DictConfig, train=True) -> HydraObjects:
         config.trainer, callbacks=callbacks, logger=logger, _convert_="partial"
     )
 
+    # Load weights if needed
+    if config.get("ckpt_path"):
+        ckpt_path = config["ckpt_path"]
+        ckpt = torch.load(ckpt_path)
+        model.load_state_dict(ckpt["state_dict"])
+
     return HydraObjects(
         datamodule=datamodule,
         architecture=architecture,

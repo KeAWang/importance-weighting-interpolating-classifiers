@@ -29,6 +29,10 @@ class LinearNet(Sequential):
         output_size = size_to_int(output_size)
         super().__init__(torch.nn.Linear(input_size, output_size))
 
+    @property
+    def linear_output(self):
+        return list(self.modules())[0][-1]
+
 
 class MLPNet(Sequential):
     """Multi-layered perception, i.e. fully-connected neural network
@@ -74,6 +78,10 @@ class MLPNet(Sequential):
         modules = OrderedDict(modules)
         super().__init__(modules)
 
+    @property
+    def linear_output(self):
+        return list(self.modules())[0][-1]
+
 
 class ConvNet(Sequential):
     """Same architecture as Byrd & Lipton 2017 on CIFAR10
@@ -83,8 +91,9 @@ class ConvNet(Sequential):
 
     input_size = (3, 32, 32)
 
-    def __init__(self, input_size, output_size):
+    def __init__(self, input_size: Size, output_size: Size):
         assert tuple(input_size) == self.input_size
+        output_size = size_to_int(output_size)
         layers = [
             torch.nn.Conv2d(3, 64, 3),
             torch.nn.ReLU(),
@@ -106,3 +115,7 @@ class ConvNet(Sequential):
             torch.nn.Linear(128, output_size),
         ]
         super().__init__(*layers)
+
+    @property
+    def linear_output(self):
+        return list(self.modules())[0][-1]

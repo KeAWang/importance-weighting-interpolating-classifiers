@@ -2,6 +2,7 @@ from typing import Any, Dict, List, Sequence, Tuple, Union
 
 import hydra
 import torch
+from omegaconf import DictConfig
 from pytorch_lightning import LightningModule
 from pytorch_lightning.metrics.classification import Accuracy
 from torch.optim import Optimizer
@@ -12,7 +13,8 @@ class ImbalancedClassifierModel(LightningModule):
         self,
         architecture: torch.nn.Module,
         class_weights: torch.Tensor,
-        optimizer: torch.optim.Optimizer,
+        optimizer: DictConfig,
+        freeze_features: bool,
         **unused_kwargs,
     ):
         super().__init__()
@@ -25,6 +27,9 @@ class ImbalancedClassifierModel(LightningModule):
         self.save_hyperparameters()
 
         self.architecture = architecture
+        if freeze_features:
+            set_grad(self.architecture, requires_grad=False)
+            set_grad(self.architecture.linear_output, requires_grad=True)
 
         self.register_buffer("class_weights", class_weights)
         self.criterion = torch.nn.CrossEntropyLoss(weight=self.class_weights)
@@ -111,3 +116,8 @@ class ImbalancedClassifierModel(LightningModule):
         num_pos_pred = sum([o["num_pos_pred"] for o in outputs])
         frac_predicted_pos = num_pos_pred / num_examples
         self.log("val/frac_predicted_pos", frac_predicted_pos, prog_bar=False)
+
+
+def set_grad(module: torch.nn.Module, requires_grad):
+    for param in module.parameters():
+        param.requires_grad = requires_grad
