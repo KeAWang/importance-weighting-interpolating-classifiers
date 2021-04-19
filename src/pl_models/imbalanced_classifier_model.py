@@ -40,6 +40,7 @@ class ImbalancedClassifierModel(LightningModule):
         if freeze_features:
             set_grad(self.architecture, requires_grad=False)
             set_grad(self.architecture.linear_output, requires_grad=True)
+            self.architecture.linear_output.reset_parameters()
         else:
             set_grad(self.architecture, requires_grad=True)
 
