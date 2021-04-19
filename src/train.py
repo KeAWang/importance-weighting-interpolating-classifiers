@@ -80,7 +80,7 @@ def hydra_init(config: DictConfig, train=True) -> HydraObjects:
         logger: List[LightningLoggerBase] = []
         if "logger" in config:
             for _, lg_conf in config["logger"].items():
-                if "_target_" in lg_conf:
+                if type(lg_conf) is DictConfig and "_target_" in lg_conf:
                     log.info(f"Instantiating logger <{lg_conf._target_}>")
                     logger.append(hydra.utils.instantiate(lg_conf))
     else:
