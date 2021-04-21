@@ -1,8 +1,103 @@
 #!/bin/bash 
-#python run.py --multirun +experiment=cifar10_binary +logger.extra_tags="[reg-vs-imbalance]" seed=0 datamodule.num_undersample_per_train_class="[16, 4096]" model.class_weights="[256, 1]" optimizer.weight_decay=1.0,0.5,0.1,0.05,0.01
-#python run.py --multirun +experiment=cifar10_binary +logger.extra_tags="[reg-vs-imbalance]" seed=0 datamodule.num_undersample_per_train_class="[64, 4096]" model.class_weights="[64, 1]" optimizer.weight_decay=1.0,0.5,0.1,0.05,0.01
-#python run.py --multirun +experiment=cifar10_binary +logger.extra_tags="[reg-vs-imbalance]" seed=0 datamodule.num_undersample_per_train_class="[256, 4096]" model.class_weights="[16, 1]" optimizer.weight_decay=1.0,0.5,0.1,0.05,0.01
-python run.py --multirun +experiment=cifar10_binary +logger.extra_tags="[reg-vs-imbalance]" seed=0 datamodule.num_undersample_per_train_class="[1024, 4096]" model.class_weights="[4, 1]" optimizer.weight_decay=1.0,0.5,0.1,0.05,0.01 optimizer.lr=0.001
-python run.py --multirun +experiment=cifar10_binary +logger.extra_tags="[reg-vs-imbalance]" seed=0 datamodule.num_undersample_per_train_class="[2048, 4096]" model.class_weights="[2, 1]" optimizer.weight_decay=1.0,0.5,0.1,0.05,0.01 optimizer.lr=0.001
-python run.py --multirun +experiment=cifar10_binary +logger.extra_tags="[reg-vs-imbalance]" seed=0 datamodule.num_undersample_per_train_class="[4096, 4096]" model.class_weights="[1, 1]" optimizer.weight_decay=1.0,0.5,0.1,0.05,0.01 optimizer.lr=0.001
-#python run.py --multirun +experiment=cifar10_binary +logger.extra_tags="[reg-vs-imbalance]" seed=0 datamodule.num_undersample_per_train_class="[3072, 4096]" model.class_weights="[4096, 3072]" optimizer.weight_decay=1.0,0.5,0.1,0.05,0.01 optimizer.lr=0.01
+# ConvNet
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 4096]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1
+
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 3072]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1
+
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 2048]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1
+
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 1024]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1
+
+# MLP
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 4096]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1 \
+datamodule.flatten_input=True \
+architecture=mlp_net
+
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 3072]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1 \
+datamodule.flatten_input=True \
+architecture=mlp_net
+
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 2048]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1 \
+datamodule.flatten_input=True \
+architecture=mlp_net
+
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 1024]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1 \
+datamodule.flatten_input=True \
+architecture=mlp_net
+
+# Logistic regression
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 4096]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1 \
+datamodule.flatten_input=True \
+architecture=linear_net
+
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 3072]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1 \
+datamodule.flatten_input=True \
+architecture=linear_net
+
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 2048]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1 \
+datamodule.flatten_input=True \
+architecture=linear_net
+
+python run.py +experiment=cifar10_binary +logger.extra_tags="[early-stopping]" seed=0 \
+datamodule.num_undersample_per_train_class="[1024, 1024]" \
+datamodule.num_oversample_per_train_class="[4096, 4096]" \
+optimizer.lr=0.01 trainer.max_epochs=100  \
+callbacks.model_checkpoint.period=5 \
+callbacks.model_checkpoint.save_top_k=-1 \
+datamodule.flatten_input=True \
+architecture=linear_net
