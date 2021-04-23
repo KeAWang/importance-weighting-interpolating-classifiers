@@ -1,0 +1,3 @@
+_target_: src.architectures.resnet.make_resnet18k
+output_size: null
+k: 64
