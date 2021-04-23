@@ -29,6 +29,10 @@ echo "TEST 2"
 echo "Debug mode for moons"
 python run.py +experiment=moons debug=True print_config=False
 
+echo "TEST 3"
+echo "Debug mode for waterbirds"
+python run.py +experiment=waterbirds debug=True print_config=False
+
 #echo "TEST 2"
 #echo "Overfit to 10 batches (10 epochs)"
 #python run.py trainer=debug_trainer trainer.overfit_batches=10 \

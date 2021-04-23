@@ -1,0 +1,13 @@
+_target_: src.pl_datamodules.waterbirds_datamodule.WaterbirdsDataModule
+# class labels:
+# 0 : landbird
+# 1 : waterbird
+
+
+resolution: [32, 32]
+augment_data: False
+flatten_input: False
+data_dir: ${data_dir}  # data_dir is specified in config.yaml
+batch_size: 16
+num_workers: 0
+pin_memory: False
