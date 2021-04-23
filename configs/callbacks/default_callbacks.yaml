@@ -5,6 +5,8 @@ model_checkpoint:
     #period: 10  #pl version 1.2.6 setting. Will replaced by ever_n_val_epochs
     #save_top_k: -1           # save k best models (determined by above metric)
     #mode: "max"             # can be "max" or "min" when save_top_k is set
+    period: 1
+    save_top_k: null
     save_last: True         # additionaly always save model from last epoch
     verbose: False
     dirpath: 'checkpoints/'
