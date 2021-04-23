@@ -61,6 +61,7 @@ def hydra_init(config: DictConfig, train=True) -> HydraObjects:
         architecture=architecture,
         class_weights=class_weights,
         optimizer=config.optimizer,
+        loss_fn=config.loss_fn,
         _recursive_=False,
     )
 

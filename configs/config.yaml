@@ -4,6 +4,7 @@
 defaults:
     - trainer: default_trainer.yaml
     - model: imbalanced_classifier_model.yaml
+    - loss_fn: cross_entropy.yaml
     - architecture: mlp_net.yaml
     - optimizer: adam.yaml
     - datamodule: imbalanced_cifar10_datamodule.yaml
