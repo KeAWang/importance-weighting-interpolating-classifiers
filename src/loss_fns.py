@@ -46,7 +46,7 @@ class LDAMLoss(nn.Module):
         self.register_buffer("m_list", m_list)
         assert s > 0
         self.s = s
-        self.weight = weight
+        self.register_buffer("weight", weight)
 
     def forward(self, x, target):
         # TODO: review code
@@ -54,9 +54,9 @@ class LDAMLoss(nn.Module):
         index = torch.zeros_like(x, dtype=torch.long)
         index.scatter_(1, target.view(-1, 1), 1)
 
-        batch_m = torch.matmul(self.m_list[None, :], index.transpose(0, 1))
+        batch_m = torch.matmul(self.m_list[None, :], index.float().transpose(0, 1))
         batch_m = batch_m.view((-1, 1))
         x_m = x - batch_m
 
-        output = torch.where(index, x_m, x)
+        output = torch.where(index == 1, x_m, x)
         return F.cross_entropy(self.s * output, target, weight=self.weight)
