@@ -16,7 +16,7 @@ export PYTHONWARNINGS="ignore"
 
 
 echo "TEST 1"
-echo "Debug mode (run 1 train, val and test loop using 1 batch)"
+echo "Debug mode for cifar10_binary (run 1 train, val and test loop using 1 batch)"
 #python run.py trainer=debug_trainer debug=True \
 #print_config=false
 python run.py +experiment=cifar10_binary \
@@ -24,6 +24,10 @@ datamodule.num_undersample_per_train_class="[1049, 4310]" \
 datamodule.num_oversample_per_train_class="[5000, 5000]" \
 trainer.max_epochs=1 model.class_weights="[1, 256]" \
 debug=True print_config=false
+
+echo "TEST 2"
+echo "Debug mode for moons"
+python run.py +experiment=moons debug=True print_config=False
 
 #echo "TEST 2"
 #echo "Overfit to 10 batches (10 epochs)"
