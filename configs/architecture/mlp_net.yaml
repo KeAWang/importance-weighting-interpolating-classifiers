@@ -1,6 +1,6 @@
 _target_: src.architectures.simple_models.MLPNet
 input_size: null
 output_size: null
-hidden_size: 100
-num_layers: 2
+hidden_size: 200
+num_layers: 3
 activation: ReLU
