@@ -163,6 +163,7 @@ def log_hyperparameters(
     hparams["debug"] = config["debug"]
     hparams["architecture"] = config["architecture"]
     hparams["data_dir"] = config["data_dir"]
+    hparams["loss_fn"] = config["loss_fn"]
     import os
 
     hparams["run_dir"] = os.getcwd()  # will output what is set under hydra.run.dir
