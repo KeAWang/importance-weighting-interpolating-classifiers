@@ -19,7 +19,10 @@ class FocalLoss(nn.Module):
         super(FocalLoss, self).__init__()
         assert gamma >= 0
         self.gamma = gamma
-        self.register_buffer("weight", weight)
+        if weight is not None:
+            self.register_buffer("weight", weight)
+        else:
+            self.weight = None
 
     def forward(self, input, target):
         return focal_loss(
@@ -29,34 +32,49 @@ class FocalLoss(nn.Module):
 
 
 class LDAMLoss(nn.Module):
-    """Based on https://github.com/kaidic/LDAM-DRW/blob/master/losses.py"""
+    """Reimplementation of https://github.com/kaidic/LDAM-DRW/blob/master/losses.py
+
+    The original published code included a temperature hyperparameter, named `s` in the
+    released code, that is by default set to 30. This was not mentioned in the paper.
+
+    """
 
     def __init__(
         self,
         weight: Optional[torch.Tensor],
         num_per_class: List[int],
-        max_m: float,
-        s: float,
+        max_margin: float,
+        inv_temperature: float,
     ):
         super(LDAMLoss, self).__init__()
-        cls_num_list = np.array(num_per_class)
-        m_list = 1.0 / np.sqrt(np.sqrt(cls_num_list))
-        m_list = m_list * (max_m / np.max(m_list))
-        m_list = torch.as_tensor(m_list, dtype=torch.get_default_dtype())
-        self.register_buffer("m_list", m_list)
-        assert s > 0
-        self.s = s
+        assert max_margin > 0
+        assert inv_temperature > 0
+        # inverse temperature parameter not specified in paper
+        # the released code sets this to 30 by default
+        self.inv_temperature = inv_temperature
+
+        if num_per_class is None:
+            raise ValueError(
+                f"num_per_class must be set to initialize {self.__class__}"
+            )
+        num_per_class = np.array(num_per_class)
+        margins = num_per_class ** (-1 / 4)
+        # Rescale to largest enforced margin
+        margins = margins * (max_margin / np.max(margins))
+        margins = torch.as_tensor(margins, dtype=torch.get_default_dtype())
+        # margins is 1D Tensor of shape (k,) for k classes
+        self.register_buffer("margins", margins)
         self.register_buffer("weight", weight)
+        assert self.margins.shape == self.weight.shape
 
-    def forward(self, x, target):
-        # TODO: review code
-        # TODO: what's the expected shape?
-        index = torch.zeros_like(x, dtype=torch.long)
-        index.scatter_(1, target.view(-1, 1), 1)
-
-        batch_m = torch.matmul(self.m_list[None, :], index.float().transpose(0, 1))
-        batch_m = batch_m.view((-1, 1))
-        x_m = x - batch_m
-
-        output = torch.where(index == 1, x_m, x)
-        return F.cross_entropy(self.s * output, target, weight=self.weight)
+    def forward(self, logits, target):
+        # follows the interface of torch.nn.CrossEntropyLoss.forward
+        assert logits.ndim == 2
+        assert target.ndim == 1
+        assert logits.shape[-1] == len(self.margins)
+        # mask[i,j] = 1 if target[i] == j else 0
+        mask = torch.nn.functional.one_hot(target, num_classes=logits.shape[-1])
+        new_logits = logits - self.margins.reshape(1, -1) * mask
+        return F.cross_entropy(
+            self.inv_temperature * new_logits, target, weight=self.weight
+        )

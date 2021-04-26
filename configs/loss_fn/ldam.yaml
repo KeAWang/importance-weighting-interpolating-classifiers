@@ -1,5 +1,5 @@
 _target_: src.loss_fns.LDAMLoss
 num_per_class: []
-max_m: 0.5
+max_margin: 0.5
 weight: null
-s: 30.
+inv_temperature: 1.
