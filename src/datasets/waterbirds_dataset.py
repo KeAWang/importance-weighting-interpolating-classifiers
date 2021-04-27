@@ -92,12 +92,17 @@ class WaterbirdsDataset(ConfounderDataset):
         self.n_classes = 2
 
         # NOTE: list of 1s and 0s, representing the confounder
-        # NOTE: I think 0 is forest and 1 is water
+        # NOTE: I think 0 is land and 1 is water
         # We only support one confounder for CUB for now
         self.confounder_array = self.metadata_df["place"].values
         self.n_confounders = 1
         # Map to groups
         self.n_groups = pow(2, 2)
+        # group mappings:
+        #   0: landbird, land
+        #   1: landbird, water
+        #   2: waterbird, land
+        #   3: waterbird, water
         self.group_array = (
             self.y_array * (self.n_groups / 2) + self.confounder_array
         ).astype("int")
