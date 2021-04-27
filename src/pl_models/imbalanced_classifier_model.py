@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Sequence, Tuple, Union, Optional
 import hydra
 import torch
 from omegaconf import DictConfig
+from pytorch_lightning import Trainer
 from pytorch_lightning import LightningModule
 from pytorch_lightning.metrics.classification import Accuracy
 from torch.optim import Optimizer
@@ -68,15 +69,19 @@ class ImbalancedClassifierModel(LightningModule):
     def forward(self, x) -> torch.Tensor:
         return self.architecture(x)
 
-    def step(self, batch):
-        x, y = batch
+    def step(
+        self, batch: Tuple
+    ) -> Tuple[
+        torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, List[torch.Tensor]
+    ]:
+        x, y, *other = batch
         logits = self.forward(x)
         loss = self.loss_fn(logits, y)
         preds = torch.argmax(logits, dim=-1)
-        return loss, logits, preds, y
+        return loss, logits, preds, y, other
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
-        loss, logits, preds, targets = self.step(batch)
+        loss, logits, preds, targets, other = self.step(batch)
 
         # log train metrics
         acc = self.train_accuracy(preds, targets)
@@ -86,20 +91,29 @@ class ImbalancedClassifierModel(LightningModule):
         # we can return here dict with any tensors
         # and then read it in some callback or in training_epoch_end() below
         # remember to always return loss from training_step, or else backpropagation will fail!
-        return {"loss": loss, "logits": logits, "preds": preds, "targets": targets}
+        return {
+            "loss": loss,
+            "logits": logits,
+            "preds": preds,
+            "targets": targets,
+            "other": other,
+        }
 
-    # [OPTIONAL METHOD]
     def training_epoch_end(self, outputs: List[Any]) -> None:
+        """
+        outputs: list of dictionaries from self.training_step, one entry for each step within epoch
+
+        """
         # log best so far train acc and train loss
-        self.metric_hist["train/acc"].append(self.trainer.callback_metrics["train/acc"])
-        self.metric_hist["train/loss"].append(
-            self.trainer.callback_metrics["train/loss"]
-        )
+        # TODO: what is self.trainer.callback_metrics?
+        trainer: Trainer = self.trainer
+        self.metric_hist["train/acc"].append(trainer.callback_metrics["train/acc"])
+        self.metric_hist["train/loss"].append(trainer.callback_metrics["train/loss"])
         self.log("train/acc_best", max(self.metric_hist["train/acc"]), prog_bar=False)
         self.log("train/loss_best", min(self.metric_hist["train/loss"]), prog_bar=False)
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, logits, preds, targets = self.step(batch)
+        loss, logits, preds, targets, other = self.step(batch)
         num_examples = len(targets)
         num_pos_pred = (preds == 1).sum().item()
 
@@ -115,12 +129,14 @@ class ImbalancedClassifierModel(LightningModule):
             "targets": targets,
             "num_examples": num_examples,
             "num_pos_pred": num_pos_pred,
+            "other": other,
         }
 
     def validation_epoch_end(self, outputs: List[Any]):
         # log best so far val acc and val loss
-        self.metric_hist["val/acc"].append(self.trainer.callback_metrics["val/acc"])
-        self.metric_hist["val/loss"].append(self.trainer.callback_metrics["val/loss"])
+        trainer: Trainer = self.trainer
+        self.metric_hist["val/acc"].append(trainer.callback_metrics["val/acc"])
+        self.metric_hist["val/loss"].append(trainer.callback_metrics["val/loss"])
         self.log("val/acc_best", max(self.metric_hist["val/acc"]), prog_bar=False)
         self.log("val/loss_best", min(self.metric_hist["val/loss"]), prog_bar=False)
 
