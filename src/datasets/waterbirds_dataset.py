@@ -37,8 +37,7 @@ class ConfounderDataset(Dataset):
 
         x = img
 
-        # TODO: also return (x, y, g)
-        return x, y
+        return x, y, g
 
     def get_splits(self, splits, train_frac=1.0):
         # TODO: what is this function
