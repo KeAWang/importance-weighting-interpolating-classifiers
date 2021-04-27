@@ -63,10 +63,12 @@ def extras(config: DictConfig) -> None:
         if config.get("logger"):
             del config["logger"]
         # Prevent trying to use Wandb callbacks now that we unset the logger
+        # Also turn off checkpointing
         if config.get("callbacks"):
-            del config["callbacks"]
-
-        # TODO: turn off checkpointing
+            blacklist = ["watch_model_with_wandb", "model_checkpoint"]
+            for callback in list(config["callbacks"].keys()):
+                if any(subword in callback.lower() for subword in blacklist):
+                    del config["callbacks"][callback]
 
     # Append extra_tags to wandb tags. Extra_tags can now be specified in commandline
     # without overwriting old tags
