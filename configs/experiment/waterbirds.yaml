@@ -30,3 +30,7 @@ logger:
     wandb:
         tags: ["binary", "waterbirds"]
 
+callbacks:
+    group_accuracy_monitor:
+        _target_: src.pl_callbacks.metrics_callbacks.GroupAccuracyMonitor
+
