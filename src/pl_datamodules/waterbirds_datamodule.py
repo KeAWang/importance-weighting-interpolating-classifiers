@@ -4,6 +4,7 @@ from math import prod
 from .imbalanced_datamodule import BaseDataModule
 from torchvision.transforms import transforms
 from ..datasets.waterbirds_dataset import WaterbirdsDataset
+from collections import Counter
 
 
 class WaterbirdsDataModule(BaseDataModule):
@@ -49,6 +50,19 @@ class WaterbirdsDataModule(BaseDataModule):
         dataset_splits = full_dataset.get_splits(["train", "val", "test"])
         self.train_dataset = dataset_splits["train"]
         self.val_dataset = dataset_splits["val"]
+
+        self.train_y_counter, self.train_g_counter = self.count(self.train_dataset)
+        print(f"Train class counts: {self.train_y_counter}")
+        print(f"Train group counts: {self.train_g_counter}")
+        self.val_y_counter, self.val_g_counter = self.count(self.val_dataset)
+        print(f"Val class counts: {self.val_y_counter}")
+        print(f"Val group counts: {self.val_g_counter}")
+
+    def count(self, dataset):
+        _, ys, gs = zip(*dataset)
+        y_counter = Counter(ys)
+        g_counter = Counter(gs)
+        return y_counter, g_counter
 
 
 def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: bool):

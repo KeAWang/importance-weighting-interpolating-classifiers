@@ -1,6 +1,5 @@
 import logging
 from typing import List, Optional
-import os
 import torch
 
 from pytorch_lightning import LightningModule, LightningDataModule, Callback, Trainer
@@ -47,6 +46,7 @@ def hydra_init(config: DictConfig, train=True) -> HydraObjects:
     )
 
     # Compute class weights if required
+    # TODO: allow for group_weights
     class_weights = (
         torch.tensor(config.model["class_weights"], dtype=torch.get_default_dtype())
         if config.model.get("class_weights")
