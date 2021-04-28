@@ -74,14 +74,23 @@ class ImbalancedClassifierModel(LightningModule):
     ) -> Tuple[
         torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, List[torch.Tensor]
     ]:
-        x, y, *other = batch
+        if isinstance(batch, tuple) and hasattr(
+            batch, "_fields"
+        ):  # check if namedtuple
+            x, y = batch.x, batch.y
+            other_data = batch._asdict()
+            other_data.pop("x")
+            other_data.pop("y")
+        else:
+            x, y = batch
+            other_data = {}
         logits = self.forward(x)
         loss = self.loss_fn(logits, y)
         preds = torch.argmax(logits, dim=-1)
-        return loss, logits, preds, y, other
+        return loss, logits, preds, y, other_data
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
-        loss, logits, preds, targets, other = self.step(batch)
+        loss, logits, preds, targets, other_data = self.step(batch)
 
         # log train metrics
         acc = self.train_accuracy(preds, targets)
@@ -96,7 +105,7 @@ class ImbalancedClassifierModel(LightningModule):
             "logits": logits,
             "preds": preds,
             "targets": targets,
-            "other": other,
+            **other_data,
         }
 
     def training_epoch_end(self, outputs: List[Any]) -> None:
@@ -113,7 +122,7 @@ class ImbalancedClassifierModel(LightningModule):
         self.log("train/loss_best", min(self.metric_hist["train/loss"]), prog_bar=False)
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, logits, preds, targets, other = self.step(batch)
+        loss, logits, preds, targets, other_data = self.step(batch)
         num_examples = len(targets)
         num_pos_pred = (preds == 1).sum().item()
 
@@ -129,7 +138,7 @@ class ImbalancedClassifierModel(LightningModule):
             "targets": targets,
             "num_examples": num_examples,
             "num_pos_pred": num_pos_pred,
-            "other": other,
+            **other_data,
         }
 
     def validation_epoch_end(self, outputs: List[Any]):

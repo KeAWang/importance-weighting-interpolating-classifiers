@@ -4,6 +4,7 @@ import pandas as pd
 from PIL import Image
 import numpy as np
 from torch.utils.data import Dataset, Subset
+from .utils import GroupedLabeledDatapoint
 
 
 class ConfounderDataset(Dataset):
@@ -37,7 +38,7 @@ class ConfounderDataset(Dataset):
 
         x = img
 
-        return x, y, g
+        return GroupedLabeledDatapoint(x=x, y=y, g=g)
 
     def get_splits(self, splits, train_frac=1.0):
         # TODO: what is this function

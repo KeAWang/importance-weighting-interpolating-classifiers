@@ -8,6 +8,7 @@ from typing import Any, Callable, Optional, Tuple, List
 from torchvision.datasets import VisionDataset
 from torchvision.datasets.utils import check_integrity, download_and_extract_archive
 from .mixins import ImbalancedDatasetMixin
+from .utils import LabeledDatapoint
 
 
 class ImbalancedCIFAR10(VisionDataset, ImbalancedDatasetMixin):
@@ -156,7 +157,7 @@ class ImbalancedCIFAR10(VisionDataset, ImbalancedDatasetMixin):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        return img, target
+        return LabeledDatapoint(x=img, y=target)
 
     def __len__(self) -> int:
         return len(self.data)
