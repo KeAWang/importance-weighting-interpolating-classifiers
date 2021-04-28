@@ -12,7 +12,6 @@ defaults:
     - override /callbacks: wandb_callbacks.yaml       # choose callback set from 'configs/callbacks/' folder or set to null
     - override /logger: wandb.yaml # choose logger from 'configs/logger/' folder or set to null
 
-
 trainer:
     min_epochs: 1
     max_epochs: 100
@@ -31,5 +30,7 @@ logger:
         tags: ["binary", "waterbirds"]
 
 callbacks:
-    group_accuracy_monitor:
-        _target_: src.pl_callbacks.metrics_callbacks.GroupAccuracyMonitor
+    group_train_accuracy_monitor:
+        _target_: src.pl_callbacks.metrics_callbacks.GroupTrainAccuracyMonitor
+    group_val_accuracy_monitor:
+        _target_: src.pl_callbacks.metrics_callbacks.GroupValAccuracyMonitor
