@@ -7,6 +7,7 @@ from math import prod
 from .imbalanced_datamodule import BaseDataModule
 from torchvision.transforms import transforms
 from ..datasets.waterbirds_dataset import WaterbirdsDataset
+from ..datasets.utils import ResampledDataset
 from collections import Counter
 
 
@@ -58,19 +59,42 @@ class WaterbirdsDataModule(BaseDataModule):
         dataset_splits = full_dataset.get_splits(["train", "val", "test"])
         self.train_dataset = dataset_splits["train"]
         self.val_dataset = dataset_splits["val"]
+        self.test_dataset = dataset_splits["test"]
 
         self.train_y_counter, self.train_g_counter = self.count(self.train_dataset)
-        print(f"Train class counts: {self.train_y_counter}")
-        print(f"Train group counts: {self.train_g_counter}")
+        # print(f"Train class counts: {self.train_y_counter}")
+        # print(f"Train group counts: {self.train_g_counter}")
         self.val_y_counter, self.val_g_counter = self.count(self.val_dataset)
-        print(f"Val class counts: {self.val_y_counter}")
-        print(f"Val group counts: {self.val_g_counter}")
+        # print(f"Val class counts: {self.val_y_counter}")
+        # print(f"Val group counts: {self.val_g_counter}")
+        self.test_y_counter, self.test_g_counter = self.count(self.test_dataset)
+        # print(f"Test class counts: {self.test_y_counter}")
+        # print(f"Test group counts: {self.test_g_counter}")
 
     def count(self, dataset):
-        _, ys, gs = zip(*dataset)
-        y_counter = Counter(ys)
-        g_counter = Counter(gs)
+        y_counter = Counter(dataset.y_array.tolist())
+        g_counter = Counter(dataset.group_array.tolist())
         return y_counter, g_counter
+
+
+class ResampledWaterbirdsDataModule(WaterbirdsDataModule):
+    def setup(self, *args, **kwargs):
+        super().setup(*args, **kwargs)
+        # Resample train dataset
+        train_dataset = self.train_dataset
+        train_weights = torch.ones(len(train_dataset))
+        label_weight_map = {y: 1 / count for y, count in self.train_y_counter.items()}
+        for y, weight in label_weight_map.items():
+            train_weights[train_dataset.y_array == y] *= weight
+        group_weight_map = {g: 1 / count for g, count in self.train_g_counter.items()}
+        for g, weight in group_weight_map.items():
+            train_weights[train_dataset.group_array == g] *= weight
+        resampled_train_dataset = ResampledDataset(
+            train_dataset, weights=train_weights, new_size=len(train_dataset)
+        )
+        self.train_dataset = resampled_train_dataset
+
+        # Keep val and test dataset the same as before
 
 
 def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: bool):
