@@ -24,7 +24,7 @@ seed: 12345
 work_dir: ${hydra:runtime.cwd}
 
 # path to folder with data
-data_dir: ${work_dir}/data/
+data_dir: ${oc.env:DATA_DIR}/data/
 
 # wandb run to load checkpoint from. Must be [user, project, run_name, ckpt_name]
 load_wandb_run: null
