@@ -4,6 +4,7 @@ from pathlib import Path
 import zipfile
 from ..simple_models import Size
 from typing import Optional
+import urllib.request
 
 # This file is modified from https://github.com/tonylins/simclr-converter
 
@@ -300,7 +301,7 @@ class SimCLRNet(ResNet):
         input_size: Size = (3, 244, 244),
         **kwargs,
     ):
-        assert width_mult in [2, 3, 4]
+        assert width_mult in [1, 2, 4]
         assert input_size == self.input_size
         super().__init__(Bottleneck, [3, 4, 6, 3], width_mult=width_mult)
 
@@ -321,10 +322,15 @@ class SimCLRNet(ResNet):
 
                     convert(str(tf_ckpt_path), str(ckpt_path))
                 elif not zipfile_path.exists():
-                    # Can't easily download from a Google Cloud Storage link
-                    raise RuntimeError(
-                        f"Please download the SimCLR checkpoint from {url} into {zipfile_path}"
+                    print(
+                        f"Downloading SimCLR checkpoint from {url} into {zipfile_path}"
                     )
+                    urllib.request.urlretrieve(url, zipfile_path)
+                    with zipfile.ZipFile(zipfile_path, "r") as zip_ref:
+                        zip_ref.extractall(ckpt_dir)
+                    from .convert import convert
+
+                    convert(str(tf_ckpt_path), str(ckpt_path))
                 else:
                     with zipfile.ZipFile(zipfile_path, "r") as zip_ref:
                         zip_ref.extractall(ckpt_dir)
