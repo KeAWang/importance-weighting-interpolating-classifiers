@@ -4,7 +4,7 @@ import tarfile
 
 from typing import Tuple
 from math import prod
-from .imbalanced_datamodule import BaseDataModule
+from .base_datamodule import BaseDataModule
 from torchvision.transforms import transforms
 from ..datasets.waterbirds_dataset import WaterbirdsDataset
 from ..datasets.utils import ResampledDataset, UndersampledDataset
