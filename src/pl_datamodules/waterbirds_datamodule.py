@@ -43,6 +43,7 @@ class WaterbirdsDataModule(BaseDataModule):
 
         dataset_dir = self.data_dir / WaterbirdsDataset.base_folder
         if not dataset_dir.exists():
+            print("Downloading Waterbirds dataset...")
             url = "https://worksheets.codalab.org/rest/bundles/0xb922b6c2d39c48bab4516780e06d5649/contents/blob/"
             file_path = self.data_dir / "waterbirds.tar.gz"
             urllib.request.urlretrieve(url, file_path)
