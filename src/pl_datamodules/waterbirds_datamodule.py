@@ -7,7 +7,7 @@ from math import prod
 from .imbalanced_datamodule import BaseDataModule
 from torchvision.transforms import transforms
 from ..datasets.waterbirds_dataset import WaterbirdsDataset
-from ..datasets.utils import ResampledDataset
+from ..datasets.utils import ResampledDataset, UndersampledDataset
 from collections import Counter
 
 
@@ -92,6 +92,26 @@ class ResampledWaterbirdsDataModule(WaterbirdsDataModule):
             train_weights[train_dataset.group_array == g] *= weight
         resampled_train_dataset = ResampledDataset(
             train_dataset, weights=train_weights, new_size=len(train_dataset)
+        )
+        self.train_dataset = resampled_train_dataset
+
+        # Keep val and test dataset the same as before
+
+
+class UndersampledWaterbirdsDataModule(WaterbirdsDataModule):
+    def setup(self, *args, **kwargs):
+        super().setup(*args, **kwargs)
+        # Resample train dataset
+        train_dataset = self.train_dataset
+        train_weights = torch.ones(len(train_dataset))
+        label_weight_map = {y: 1 / count for y, count in self.train_y_counter.items()}
+        for y, weight in label_weight_map.items():
+            train_weights[train_dataset.y_array == y] *= weight
+        group_weight_map = {g: 1 / count for g, count in self.train_g_counter.items()}
+        for g, weight in group_weight_map.items():
+            train_weights[train_dataset.group_array == g] *= weight
+        resampled_train_dataset = UndersampledDataset(
+            train_dataset, weights=train_weights
         )
         self.train_dataset = resampled_train_dataset
 
