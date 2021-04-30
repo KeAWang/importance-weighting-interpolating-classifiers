@@ -93,7 +93,9 @@ class UndersampledDataset(Dataset):
 
         unif_rv = torch.rand(weights.size(), generator=generator)
         # only keep these indices
-        indices = torch.nonzero(unif_rv <= weights / weights_upper_bound)
+        indices = torch.nonzero(
+            unif_rv <= weights / weights_upper_bound, as_tuple=True
+        )[0]
         self.indices = indices
 
     def __getitem__(self, idx):
