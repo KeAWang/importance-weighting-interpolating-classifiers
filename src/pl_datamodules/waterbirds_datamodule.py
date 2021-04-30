@@ -41,7 +41,7 @@ class WaterbirdsDataModule(BaseDataModule):
         """Download data if needed. This method is called only from a single GPU.
         Do not use it to assign state (self.x = y)."""
 
-        dataset_dir = self.root / WaterbirdsDataset.base_folder
+        dataset_dir = self.data_dir / WaterbirdsDataset.base_folder
         if not dataset_dir.exists():
             url = "https://worksheets.codalab.org/rest/bundles/0xb922b6c2d39c48bab4516780e06d5649/contents/blob/"
             file_path = self.data_dir / "waterbirds.tar.gz"
