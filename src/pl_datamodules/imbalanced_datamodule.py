@@ -1,6 +1,7 @@
 import torch
 from typing import Optional, List
 from math import prod
+from pathlib import Path
 
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
@@ -33,7 +34,7 @@ class BaseDataModule(LightningDataModule):
         super().__init__()
 
         self.flatten_input = flatten_input
-        self.data_dir = data_dir
+        self.data_dir = Path(data_dir)
         self.batch_size = batch_size
         self.num_workers = num_workers
         self.pin_memory = pin_memory

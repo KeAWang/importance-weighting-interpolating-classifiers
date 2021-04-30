@@ -1,4 +1,7 @@
 import torch
+import urllib.request
+import tarfile
+
 from typing import Tuple
 from math import prod
 from .imbalanced_datamodule import BaseDataModule
@@ -37,8 +40,13 @@ class WaterbirdsDataModule(BaseDataModule):
         """Download data if needed. This method is called only from a single GPU.
         Do not use it to assign state (self.x = y)."""
 
-        # Nothing to do here. We assume data is already downloaded
-        return
+        dataset_dir = self.root / WaterbirdsDataset.base_folder
+        if not dataset_dir.exists():
+            url = "https://worksheets.codalab.org/rest/bundles/0xb922b6c2d39c48bab4516780e06d5649/contents/blob/"
+            file_path = self.data_dir / "waterbirds.tar.gz"
+            urllib.request.urlretrieve(url, file_path)
+            with tarfile.open(file_path) as file:
+                file.extractall(dataset_dir)
 
     def setup(self, stage=None):
         """Load data. Set variables: self.train_dataset, self.data_val, self.test_dataset."""
