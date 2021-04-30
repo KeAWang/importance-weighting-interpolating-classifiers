@@ -209,6 +209,7 @@ dependencies:
     - aiohttp==3.7.4.post0
     - alembic==1.5.8
     - antlr4-python3-runtime==4.8
+    - astunparse==1.6.3
     - async-timeout==3.0.1
     - cachetools==4.2.1
     - cfgv==3.2.0
@@ -222,17 +223,22 @@ dependencies:
     - distlib==0.3.1
     - docker-pycreds==0.4.0
     - filelock==3.0.12
+    - flatbuffers==1.12
     - fsspec==0.8.7
+    - gast==0.3.3
     - gitdb==4.0.7
     - gitpython==3.1.14
     - google-auth==1.28.0
     - google-auth-oauthlib==0.4.3
-    - grpcio==1.36.1
+    - google-pasta==0.2.0
+    - grpcio==1.32.0
+    - h5py==2.10.0
     - hydra-colorlog==1.0.0
     - hydra-core==1.1.0.dev5
     - hydra-optuna-sweeper==0.9.0rc2
     - identify==2.2.2
     - importlib-resources==5.1.2
+    - keras-preprocessing==1.1.2
     - mako==1.1.4
     - markdown==3.3.4
     - multidict==5.1.0
@@ -240,6 +246,7 @@ dependencies:
     - numpy==1.19.5
     - oauthlib==3.1.0
     - omegaconf==2.1.0.dev24
+    - opt-einsum==3.3.0
     - optuna==2.6.0
     - pathtools==0.1.2
     - pbr==5.5.1
@@ -266,10 +273,14 @@ dependencies:
     - subprocess32==3.5.4
     - tensorboard==2.4.1
     - tensorboard-plugin-wit==1.8.0
+    - tensorflow==2.4.1
+    - tensorflow-estimator==2.4.0
+    - termcolor==1.1.0
     - torchmetrics==0.2.0
     - tqdm==4.59.0
     - virtualenv==20.4.3
     - wandb==0.10.23
     - werkzeug==1.0.1
+    - wrapt==1.12.1
     - yarl==1.6.3
-prefix: /u/nlp/anaconda/main/anaconda3/envs/is
+prefix: /home/alex/miniconda3/envs/is
