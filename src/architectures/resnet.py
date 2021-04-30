@@ -1,5 +1,4 @@
 ## Based on: https://gitlab.com/harvard-machine-learning/double-descent/-/blob/master/models/resnet18k.py
-from typing import List, Type, Union, Optional, Callable
 from .simple_models import Size
 
 

@@ -18,6 +18,7 @@ class ImbalancedClassifierModel(LightningModule):
         loss_fn: DictConfig,
         freeze_features: bool,
         ckpt_path: Optional[str],
+        output_size: int,
         **unused_kwargs,
     ):
         super().__init__()
@@ -40,9 +41,22 @@ class ImbalancedClassifierModel(LightningModule):
             self.load_state_dict(ckpt["state_dict"])
 
         if freeze_features:
+            print("Freezing feature extractor")
+            # Replace linear layer with new linear layer with possibly differ number of classes
+            in_features = self.architecture.linear_output.in_features
+            new_out = output_size
+            self.architecture.linear_output.out_features = new_out
+            print("Resetting final linear layer")
+            self.architecture.linear_output.weight = torch.nn.Parameter(
+                torch.Tensor(new_out, in_features)
+            )
+            self.architecture.linear_output.bias = torch.nn.Parameter(
+                torch.Tensor(new_out)
+            )
+            self.architecture.linear_output.reset_parameters()
+
             set_grad(self.architecture, requires_grad=False)
             set_grad(self.architecture.linear_output, requires_grad=True)
-            self.architecture.linear_output.reset_parameters()
         else:
             set_grad(self.architecture, requires_grad=True)
 
