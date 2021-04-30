@@ -308,7 +308,9 @@ class SimCLRNet(ResNet):
             ckpt_dir = Path(ckpt_dir)
             ckpt_path = ckpt_dir / f"resnet50-{width_mult}x.pth"
             if not ckpt_path.exists():
-                url = f"https://storage.cloud.google.com/simclr-gcs/checkpoints/ResNet50_{width_mult}x.zip"
+                # Given link from SimCLR repo is "https://storage.cloud.google.com/simclr-gcs/checkpoints/ResNet50_{width_mult}x.zip"
+                # But we need to change the link or else we'll just get html
+                url = f"https://storage.googleapis.com/simclr-gcs/checkpoints/ResNet50_{width_mult}x.zip"
                 tf_ckpt_path = (
                     ckpt_dir / f"ResNet50_{width_mult}x" / "model.ckpt-225206"
                 )
@@ -317,7 +319,7 @@ class SimCLRNet(ResNet):
                 if tf_ckpt_path.exists():
                     from .convert import convert
 
-                    convert(tf_ckpt_path, ckpt_path)
+                    convert(str(tf_ckpt_path), str(ckpt_path))
                 elif not zipfile_path.exists():
                     # Can't easily download from a Google Cloud Storage link
                     raise RuntimeError(
@@ -328,7 +330,7 @@ class SimCLRNet(ResNet):
                         zip_ref.extractall(ckpt_dir)
                     from .convert import convert
 
-                    convert(tf_ckpt_path, ckpt_path)
+                    convert(str(tf_ckpt_path), str(ckpt_path))
 
             ckpt = torch.load(ckpt_path)
             self.load_state_dict(ckpt["state_dict"])
