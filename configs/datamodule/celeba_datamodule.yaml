@@ -1,0 +1,13 @@
+_target_: src.pl_datamodules.celeba_datamodule.CelebADataModule
+# class labels:
+# 0 : TODO
+# 1 : TODO
+resolution: [32, 32]
+augment_data: False
+target_name: "Blond_Hair"
+confounder_names: ["Male"]
+flatten_input: False
+data_dir: ${data_dir}  # data_dir is specified in config.yaml
+batch_size: 16
+num_workers: 0
+pin_memory: False
