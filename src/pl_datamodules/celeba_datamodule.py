@@ -93,9 +93,6 @@ class ResampledCelebADataModule(CelebADataModule):
         # Resample train dataset
         train_dataset = self.train_dataset
         train_weights = torch.ones(len(train_dataset))
-        label_weight_map = {y: 1 / count for y, count in self.train_y_counter.items()}
-        for y, weight in label_weight_map.items():
-            train_weights[train_dataset.y_array == y] *= weight
         group_weight_map = {g: 1 / count for g, count in self.train_g_counter.items()}
         for g, weight in group_weight_map.items():
             train_weights[train_dataset.group_array == g] *= weight
@@ -113,18 +110,23 @@ class UndersampledCelebADataModule(CelebADataModule):
         # Resample train dataset
         train_dataset = self.train_dataset
         train_weights = torch.ones(len(train_dataset))
-        label_weight_map = {y: 1 / count for y, count in self.train_y_counter.items()}
-        for y, weight in label_weight_map.items():
-            train_weights[train_dataset.y_array == y] *= weight
         group_weight_map = {g: 1 / count for g, count in self.train_g_counter.items()}
         for g, weight in group_weight_map.items():
             train_weights[train_dataset.group_array == g] *= weight
-        resampled_train_dataset = UndersampledDataset(
+        undersampled_train_dataset = UndersampledDataset(
             train_dataset, weights=train_weights
         )
-        self.train_dataset = resampled_train_dataset
 
-        # Keep val and test dataset the same as before
+        new_indices = undersampled_train_dataset.indices
+        new_group_array = train_dataset.group_array[new_indices]
+        new_y_array = train_dataset.y_array[new_indices]
+        undersampled_train_dataset.group_array = new_group_array
+        undersampled_train_dataset.y_array = new_y_array
+
+        self.train_dataset = undersampled_train_dataset
+        self.train_y_counter, self.train_g_counter = self.count(self.train_dataset)
+        print(f"Dataset classes were undersampled to {self.train_y_counter}")
+        print(f"Dataset groups were undersampled to {self.train_g_counter}")
 
 
 def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: bool):
