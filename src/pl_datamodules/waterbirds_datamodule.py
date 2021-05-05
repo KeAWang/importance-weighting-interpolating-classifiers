@@ -84,9 +84,6 @@ class ResampledWaterbirdsDataModule(WaterbirdsDataModule):
         # Resample train dataset
         train_dataset = self.train_dataset
         train_weights = torch.ones(len(train_dataset))
-        label_weight_map = {y: 1 / count for y, count in self.train_y_counter.items()}
-        for y, weight in label_weight_map.items():
-            train_weights[train_dataset.y_array == y] *= weight
         group_weight_map = {g: 1 / count for g, count in self.train_g_counter.items()}
         for g, weight in group_weight_map.items():
             train_weights[train_dataset.group_array == g] *= weight
