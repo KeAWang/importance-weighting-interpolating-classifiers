@@ -9,16 +9,17 @@ def focal_loss(input_values, gamma):
     """Based on https://github.com/kaidic/LDAM-DRW/blob/master/losses.py"""
     p = torch.exp(-input_values)
     loss = (1 - p) ** gamma * input_values
-    return loss.mean()
+    return loss
 
 
 class FocalLoss(nn.Module):
     """Based on https://github.com/kaidic/LDAM-DRW/blob/master/losses.py"""
 
-    def __init__(self, weight: Optional[torch.Tensor], gamma: float):
+    def __init__(self, weight: Optional[torch.Tensor], gamma: float, reduction: str):
         super(FocalLoss, self).__init__()
         assert gamma >= 0
         self.gamma = gamma
+        assert reduction == "none"
         if weight is not None:
             self.register_buffer("weight", weight)
         else:
@@ -45,6 +46,7 @@ class LDAMLoss(nn.Module):
         num_per_class: List[int],
         max_margin: float,
         inv_temperature: float,
+        reduction: str,
     ):
         super(LDAMLoss, self).__init__()
         assert max_margin > 0
@@ -76,5 +78,8 @@ class LDAMLoss(nn.Module):
         mask = torch.nn.functional.one_hot(target, num_classes=logits.shape[-1])
         new_logits = logits - self.margins.reshape(1, -1) * mask
         return F.cross_entropy(
-            self.inv_temperature * new_logits, target, weight=self.weight
+            self.inv_temperature * new_logits,
+            target,
+            weight=self.weight,
+            reduction=self.reduction,
         )
