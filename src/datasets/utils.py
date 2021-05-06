@@ -211,6 +211,47 @@ class OversampledDataset(Dataset):
 #        return len(self.dataset)
 
 
+class ReweightedDataset(Dataset):
+
+    """Wraps a map Dataset into a reweighted dataset.
+
+    Each time we __getitem__ we'll also get a weight `w` as part of our returned
+    tuple
+
+    Args:
+        dataset (Dataset): The whole Dataset
+        weights (sequence):  The importance weights of each element of `dataset`.
+            weights[i] should be equal to the likelihood ratio of dataset[i] between
+            the target distribution and the source distribution
+        generator (Optional[Generator]): torch.Generator
+    """
+
+    def __init__(
+        self,
+        dataset: Dataset,
+        weights: Sequence[float],
+        generator: Optional[Generator] = None,
+    ):
+
+        self.dataset = dataset
+        self.weights = weights
+        self.generator = generator
+
+    def __getitem__(self, idx):
+        datapoint = self.dataset[idx]
+        w = self.weights[idx]
+        if isinstance(datapoint, tuple) and hasattr(
+            datapoint, "_fields"
+        ):  # check if namedtuple
+            datapoint = datapoint._replace(w=w)
+        else:
+            datapoint = datapoint + (w,)
+        return datapoint
+
+    def __len__(self):
+        return len(self.dataset)
+
+
 class ResampledDataset(Dataset):
     """Wraps a map Dataset into a resampled dataset with replacement.
 
