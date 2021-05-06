@@ -89,17 +89,20 @@ class ImbalancedClassifierModel(LightningModule):
         if isinstance(batch, tuple) and hasattr(
             batch, "_fields"
         ):  # check if namedtuple
-            x, y = batch.x, batch.y
+            x, y, w = batch.x, batch.y, batch.w
             other_data = batch._asdict()
             other_data.pop("x")
             other_data.pop("y")
+            other_data.pop("w")
         else:
             x, y = batch
+            w = torch.ones_like(y)
             other_data = {}
         logits = self.forward(x)
-        loss = self.loss_fn(logits, y).mean(0)
+        loss = self.loss_fn(logits, y)
+        reweighted_loss = (loss * w).sum(0) / w.sum(0)
         preds = torch.argmax(logits, dim=-1)
-        return loss, logits, preds, y, other_data
+        return reweighted_loss, logits, preds, y, other_data
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
         loss, logits, preds, targets, other_data = self.step(batch)

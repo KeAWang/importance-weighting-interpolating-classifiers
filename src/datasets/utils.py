@@ -5,8 +5,14 @@ import torch
 from typing import Sequence, Optional, Dict, Union
 
 
-LabeledDatapoint = namedtuple("LabeledDatapoint", ("x", "y"))
-GroupedLabeledDatapoint = namedtuple("GroupedLabeledDatapoint", ("x", "y", "g"))
+LabeledDatapoint = namedtuple(
+    "LabeledDatapoint", ("x", "y", "w"), defaults=(None, None, 1)
+)
+
+
+GroupedLabeledDatapoint = namedtuple(
+    "GroupedLabeledDatapoint", ("x", "y", "w", "g"), defaults=(None, None, 1, None)
+)
 
 
 class UndersampledByGroupDataset(Dataset):
