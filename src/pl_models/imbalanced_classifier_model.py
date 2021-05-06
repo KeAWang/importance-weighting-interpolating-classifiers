@@ -13,7 +13,6 @@ class ImbalancedClassifierModel(LightningModule):
     def __init__(
         self,
         architecture: torch.nn.Module,
-        class_weights: torch.Tensor,
         optimizer: DictConfig,
         loss_fn: DictConfig,
         freeze_features: bool,
@@ -32,8 +31,7 @@ class ImbalancedClassifierModel(LightningModule):
 
         self.architecture = architecture
 
-        self.register_buffer("class_weights", class_weights)
-        self.loss_fn = hydra.utils.instantiate(loss_fn, weight=self.class_weights)
+        self.loss_fn = hydra.utils.instantiate(loss_fn, reduction="none")
 
         # Load weights if needed
         if ckpt_path is not None:
@@ -99,7 +97,7 @@ class ImbalancedClassifierModel(LightningModule):
             x, y = batch
             other_data = {}
         logits = self.forward(x)
-        loss = self.loss_fn(logits, y)
+        loss = self.loss_fn(logits, y).mean(0)
         preds = torch.argmax(logits, dim=-1)
         return loss, logits, preds, y, other_data
 
