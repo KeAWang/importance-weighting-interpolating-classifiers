@@ -38,14 +38,14 @@ class GroupAccuracyMonitor(Callback):
 
         correct = (class_labels == pred_labels).float()
 
-        # Groupby: https://twitter.com/jeremyphoward/status/1185062637341593600
-        sorted_group_labels = group_labels.sort().values
-        idxs, vals = torch.unique(sorted_group_labels, sorted=True, return_counts=True)
-        vs = torch.split_with_sizes(correct, tuple(vals))
-        group_accs = {k.item(): v.mean().item() for k, v in zip(idxs, vs)}
-        for group, acc in group_accs.items():
+        group_accs = {}
+        for g in torch.unique(group_labels).tolist():
+            in_g = group_labels == g
+            acc = correct[in_g].mean().item()
+            group_accs[g] = acc
+
             pl_module.log(
-                f"{self.mode}/group_{group}_acc",
+                f"{self.mode}/group_{g}_acc",
                 acc,
                 on_step=False,
                 on_epoch=True,
