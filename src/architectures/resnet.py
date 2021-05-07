@@ -99,7 +99,7 @@ def make_resnet18k(input_size: Size, output_size: Size, k: int = 64) -> CIFARRes
 
 
 class ResNet(WiderResNet):
-    input_size = (3, 244, 244)
+    input_size = (3, 224, 224)
 
     def __init__(
         self,

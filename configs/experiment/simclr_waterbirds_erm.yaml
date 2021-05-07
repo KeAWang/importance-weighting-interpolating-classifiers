@@ -25,7 +25,7 @@ trainer:
     max_epochs: 300
 
 datamodule:
-    resolution: [244, 244]
+    resolution: [224, 224]
     batch_size: 128
     num_workers: 4
     pin_memory: True

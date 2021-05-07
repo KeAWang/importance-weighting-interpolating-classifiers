@@ -134,7 +134,7 @@ class Bottleneck(nn.Module):
 
 
 class ResNet(nn.Module):
-    input_size = (3, 244, 244)
+    input_size = (3, 224, 224)
 
     def __init__(
         self,

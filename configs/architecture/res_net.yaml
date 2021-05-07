@@ -1,6 +1,6 @@
 _target_: src.architectures.resnet.ResNet
 arch: null
-input_size: [3, 244, 244]
+input_size: [3, 224, 224]
 output_size: null
 pretrained: True
 ckpt_dir: ${oc.env:SIMCLR_CKPT_DIR}
