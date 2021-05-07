@@ -31,7 +31,7 @@ datamodule:
     annealing_fn: null
 
     resolution: [224, 224]
-    batch_size: 64
+    batch_size: 128
     num_workers: 4
     pin_memory: True
     flatten_input: False
