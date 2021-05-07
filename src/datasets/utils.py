@@ -2,7 +2,7 @@ from collections import namedtuple, defaultdict
 from torch.utils.data import Dataset
 from torch import Generator
 import torch
-from typing import Sequence, Optional, Dict, Union
+from typing import Sequence, Optional, Dict, Union, Callable
 
 
 LabeledDatapoint = namedtuple(
@@ -294,14 +294,14 @@ class ResampledDataset(Dataset):
         return len(self.indices)
 
 
-def undersampling_schedule(weights, T, tradeoff_fn):
+def undersampling_schedule(weights: torch.Tensor, T: int, annealing_fn: Callable):
     weights = weights / torch.max(weights)
     for t in range(T + 1):
         rv = torch.rand(*weights.shape)
 
-        keep_idx = rv <= tradeoff_fn(weights, t, T)
-        idx = torch.arange(len(keep_idx), device=weights.device)[keep_idx]
+        keep_idx = rv <= annealing_fn(weights, t, T)
+        idx = torch.nonzero(keep_idx, as_tuple=True)[0]
 
-        weights_t = weights[idx] / tradeoff_fn(weights[keep_idx], t, T)
+        weights_t = weights[idx] / annealing_fn(weights[keep_idx], t, T)
 
         yield idx, weights_t

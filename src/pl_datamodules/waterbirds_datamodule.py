@@ -177,18 +177,18 @@ def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: 
 
 class AnnealedWaterbirdsDataModule(WaterbirdsDataModule):
     def __init__(
-        self, g: Optional[Callable], T: int, *args, **kwargs,
+        self, annealing_fn: Optional[Callable], num_epochs: int, *args, **kwargs,
     ):
         super().__init__(*args, **kwargs)
 
-        if g is None:
+        if annealing_fn is None:
 
-            def g(weights, t, T):
+            def annealing_fn(weights, t, T):
                 return weights ** (t / T)
 
         self.current_epoch = 0
-        self.g = g
-        self.T = T
+        self.annealing_fn = annealing_fn
+        self.num_epochs = num_epochs
 
     def setup(self, stage=None):
         super().setup(stage=stage)
@@ -201,7 +201,9 @@ class AnnealedWaterbirdsDataModule(WaterbirdsDataModule):
 
         self.annealed_train_datasets = list(
             ReweightedDataset(Subset(train_dataset, idxs), ws)
-            for idxs, ws in undersampling_schedule(train_weights, self.T, self.g)
+            for idxs, ws in undersampling_schedule(
+                train_weights, self.num_epochs, self.annealing_fn
+            )
         )
 
     def train_dataloader(self):

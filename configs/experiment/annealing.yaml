@@ -22,8 +22,8 @@ optimizer:
 
 datamodule:
     _target_: src.pl_datamodules.waterbirds_datamodule.AnnealedWaterbirdsDataModule
-    T: ${trainer.max_epochs}
-    g: null
+    num_epochs: ${trainer.max_epochs}
+    annealing_fn: null
     batch_size: 64
     num_workers: 4  # Set to 0 for debugging
     pin_memory: True
