@@ -3,7 +3,7 @@ import torch.nn as nn
 from pathlib import Path
 import zipfile
 from ..simple_models import Size
-from typing import Optional
+from typing import Type, Any, Callable, Union, List, Optional
 import urllib.request
 
 # This file is modified from https://github.com/tonylins/simclr-converter
@@ -138,15 +138,15 @@ class ResNet(nn.Module):
 
     def __init__(
         self,
-        block,
-        layers,
-        num_classes=1000,
-        zero_init_residual=False,
-        groups=1,
-        width_per_group=64,
-        replace_stride_with_dilation=None,
-        norm_layer=None,
-        width_mult=1,
+        block: Type[Union[BasicBlock, Bottleneck]],
+        layers: List[int],
+        num_classes: int = 1000,
+        zero_init_residual: bool = False,
+        groups: int = 1,
+        width_per_group: int = 64,
+        replace_stride_with_dilation: Optional[List[bool]] = None,
+        norm_layer: Optional[Callable[..., nn.Module]] = None,
+        width_mult: int = 1,
     ):
         super(ResNet, self).__init__()
         if norm_layer is None:
@@ -297,11 +297,12 @@ def resnet50x4(**kwargs):
 class SimCLRNet(ResNet):
     def __init__(
         self,
+        input_size: Size,
+        output_size: Size,
+        width_mult: int,
         ckpt_dir: Optional[str] = None,
-        width_mult: int = 4,
-        input_size: Size = (3, 244, 244),
-        **kwargs,
     ):
+        # TODO: remove kwargs?
         assert width_mult in [1, 2, 4]
         assert input_size == self.input_size
         super().__init__(Bottleneck, [3, 4, 6, 3], width_mult=width_mult)

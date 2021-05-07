@@ -1,6 +1,9 @@
 ## Based on: https://gitlab.com/harvard-machine-learning/double-descent/-/blob/master/models/resnet18k.py
 from .simple_models import Size
-
+from .simclr.resnet_wider import ResNet as WiderResNet, Bottleneck, BasicBlock
+from torchvision.models.resnet import model_urls
+from torchvision.models.utils import load_state_dict_from_url
+from typing import Optional
 
 ## ResNet18 for CIFAR
 ## Based on: https://github.com/kuangliu/pytorch-cifar/blob/master/models/preact_resnet.py
@@ -45,14 +48,14 @@ class PreActBlock(nn.Module):
         return out
 
 
-class ResNet(nn.Module):
+class CIFARResNet(nn.Module):
     input_size = (3, 32, 32)
 
     def __init__(
-        self, input_size: Size, ouput_size: Size, block, num_blocks, init_channels=64
+        self, input_size: Size, output_size: Size, block, num_blocks, init_channels=64
     ):
         assert tuple(input_size) == self.input_size
-        super(ResNet, self).__init__()
+        super(CIFARResNet, self).__init__()
         self.in_planes = init_channels
         c = init_channels
 
@@ -61,7 +64,7 @@ class ResNet(nn.Module):
         self.layer2 = self._make_layer(block, 2 * c, num_blocks[1], stride=2)
         self.layer3 = self._make_layer(block, 4 * c, num_blocks[2], stride=2)
         self.layer4 = self._make_layer(block, 8 * c, num_blocks[3], stride=2)
-        self.linear = nn.Linear(8 * c * block.expansion, ouput_size)
+        self.linear = nn.Linear(8 * c * block.expansion, output_size)
 
     def _make_layer(self, block, planes, num_blocks, stride):
         # eg: [2, 1, 1, ..., 1]. Only the first one downsamples.
@@ -88,6 +91,42 @@ class ResNet(nn.Module):
         return self.linear
 
 
-def make_resnet18k(input_size: Size, output_size: Size, k: int = 64) -> ResNet:
-    """ Returns a ResNet18 with width parameter k. (k=64 is standard ResNet18)"""
-    return ResNet(input_size, output_size, PreActBlock, [2, 2, 2, 2], init_channels=k)
+def make_resnet18k(input_size: Size, output_size: Size, k: int = 64) -> CIFARResNet:
+    """ Returns a ResNet18 for CIFAR-sized data with width parameter k. (k=64 is standard ResNet18)"""
+    return CIFARResNet(
+        input_size, output_size, PreActBlock, [2, 2, 2, 2], init_channels=k
+    )
+
+
+class ResNet(WiderResNet):
+    input_size = (3, 244, 244)
+
+    def __init__(
+        self,
+        arch: str,
+        input_size: Size,
+        output_size: Size,
+        pretrained: bool,
+        ckpt_dir: Optional[str] = None,
+    ):
+        assert tuple(input_size) == self.input_size
+
+        if arch == "resnet18":
+            block = BasicBlock
+            layers = [2, 2, 2, 2]
+        elif arch == "resnet34":
+            block = BasicBlock
+            layers = [3, 4, 6, 3]
+        elif arch == "resnet50":
+            block = Bottleneck
+            layers = [3, 4, 6, 3]
+        else:
+            raise ValueError(f"{arch} is not a supported type of ResNet!")
+
+        super().__init__(block=block, layers=layers, width_mult=1)
+
+        if pretrained:
+            state_dict = load_state_dict_from_url(
+                model_urls[arch], model_dir=ckpt_dir, progress=True
+            )
+            self.load_state_dict(state_dict)

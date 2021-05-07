@@ -1,3 +1,6 @@
-_target_: src.architectures.resnet.make_resnet18k
+_target_: src.architectures.resnet.ResNet
+arch: resnet18
+input_size: [3, 244, 244]
 output_size: null
-k: 64
+pretrained: True
+ckpt_dir: ${oc.env:SIMCLR_CKPT_DIR}
