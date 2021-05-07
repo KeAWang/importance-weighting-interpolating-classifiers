@@ -292,3 +292,16 @@ class ResampledDataset(Dataset):
 
     def __len__(self):
         return len(self.indices)
+
+
+def undersampling_schedule(weights, T, tradeoff_fn):
+    weights = weights / torch.max(weights)
+    for t in range(T + 1):
+        rv = torch.rand(*weights.shape)
+
+        keep_idx = rv <= tradeoff_fn(weights, t, T)
+        idx = torch.arange(len(keep_idx), device=weights.device)[keep_idx]
+
+        weights_t = weights[idx] / tradeoff_fn(weights[keep_idx], t, T)
+
+        yield idx, weights_t

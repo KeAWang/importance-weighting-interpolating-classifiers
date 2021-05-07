@@ -2,12 +2,18 @@ import torch
 import urllib.request
 import tarfile
 
-from typing import Tuple
+from typing import Tuple, Callable, Optional
 from math import prod
 from .base_datamodule import BaseDataModule
+from torch.utils.data import DataLoader, Subset
 from torchvision.transforms import transforms
 from ..datasets.waterbirds_dataset import WaterbirdsDataset
-from ..datasets.utils import ResampledDataset, UndersampledDataset, ReweightedDataset
+from ..datasets.utils import (
+    ResampledDataset,
+    UndersampledDataset,
+    ReweightedDataset,
+    undersampling_schedule,
+)
 from collections import Counter
 
 
@@ -167,3 +173,45 @@ def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: 
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ]
     return transforms_list
+
+
+class AnnealedWaterbirdsDataModule(WaterbirdsDataModule):
+    def __init__(
+        self, g: Optional[Callable], T: int, *args, **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+
+        if g is None:
+
+            def g(weights, t, T):
+                return weights ** (t / T)
+
+        self.current_epoch = 0
+        self.g = g
+        self.T = T
+
+    def setup(self, stage=None):
+        super().setup(stage=stage)
+        # Compute weights
+        train_dataset = self.train_dataset
+        train_weights = torch.ones(len(train_dataset))
+        group_weight_map = {g: 1 / count for g, count in self.train_g_counter.items()}
+        for g, weight in group_weight_map.items():
+            train_weights[train_dataset.group_array == g] *= weight
+
+        self.annealed_train_datasets = list(
+            ReweightedDataset(Subset(train_dataset, idxs), ws)
+            for idxs, ws in undersampling_schedule(train_weights, self.T, self.g)
+        )
+
+    def train_dataloader(self):
+        dataset = self.annealed_train_datasets[self.current_epoch]
+        # NOTE: Must use with Trainer.reload_dataloaders_every_epoch = True
+        self.current_epoch += 1
+        return DataLoader(
+            dataset=dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            shuffle=True,
+        )
