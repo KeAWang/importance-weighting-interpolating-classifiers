@@ -6,6 +6,6 @@ resolution: null
 augment_data: False
 flatten_input: False
 data_dir: ${data_dir}  # data_dir is specified in config.yaml
-batch_size: 16
+batch_size: null
 num_workers: 0
-pin_memory: False
+pin_memory: True

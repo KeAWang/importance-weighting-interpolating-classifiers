@@ -4,7 +4,7 @@ _target_: pytorch_lightning.Trainer
 gpus: 1
 
 min_epochs: 1
-max_epochs: 1000
+max_epochs: 2
 
 weights_summary: null
 progress_bar_refresh_rate: 10

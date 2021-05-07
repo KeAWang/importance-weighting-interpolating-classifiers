@@ -3,11 +3,6 @@
 # specify here default training configuration
 defaults:
     - trainer: default_trainer.yaml
-    - model: imbalanced_classifier_model.yaml
-    - loss_fn: cross_entropy.yaml
-    - architecture: mlp_net.yaml
-    - optimizer: adam.yaml
-    - datamodule: imbalanced_cifar10_datamodule.yaml
     - callbacks: wandb_callbacks.yaml  # set this to null if you don't want to use callbacks
     - logger: wandb # set logger here or use command line (e.g. `python run.py logger=wandb`)
 
@@ -15,7 +10,7 @@ defaults:
     #- override hydra/hydra_logging: colorlog
     #- override hydra/job_logging: colorlog
 
-seed: 12345
+seed: 0
 
 # path to original working directory
 # hydra hijacks working directory by changing it to the current log directory,

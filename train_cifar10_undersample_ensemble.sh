@@ -1,6 +1,0 @@
-#!/bin/bash
-python run.py +experiment=cifar10_binary "datamodule.num_undersample_per_train_class=[1024, 1024]" "datamodule.num_oversample_per_train_class=[1024, 1024]" seed=0 "logger.wandb.tags=['binary', 'cifar10', 'ensemble', 'undersample']" trainer.max_epochs=500
-python run.py +experiment=cifar10_binary "datamodule.num_undersample_per_train_class=[1024, 1024]" "datamodule.num_oversample_per_train_class=[1024, 1024]" seed=1 "logger.wandb.tags=['binary', 'cifar10', 'ensemble', 'undersample']" trainer.max_epochs=500
-python run.py +experiment=cifar10_binary "datamodule.num_undersample_per_train_class=[1024, 1024]" "datamodule.num_oversample_per_train_class=[1024, 1024]" seed=2 "logger.wandb.tags=['binary', 'cifar10', 'ensemble', 'undersample']" trainer.max_epochs=500
-python run.py +experiment=cifar10_binary "datamodule.num_undersample_per_train_class=[1024, 1024]" "datamodule.num_oversample_per_train_class=[1024, 1024]" seed=3 "logger.wandb.tags=['binary', 'cifar10', 'ensemble', 'undersample']" trainer.max_epochs=500
-python run.py +experiment=cifar10_binary "datamodule.num_undersample_per_train_class=[1024, 1024]" "datamodule.num_oversample_per_train_class=[1024, 1024]" seed=4 "logger.wandb.tags=['binary', 'cifar10', 'ensemble', 'undersample']" trainer.max_epochs=500
