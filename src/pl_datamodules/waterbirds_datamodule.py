@@ -93,10 +93,10 @@ class ReweightedWaterbirdsDataModule(WaterbirdsDataModule):
         group_weight_map = {g: 1 / count for g, count in self.train_g_counter.items()}
         for g, weight in group_weight_map.items():
             train_weights[train_dataset.group_array == g] *= weight
-        resampled_train_dataset = ReweightedDataset(
+        reweighted_train_dataset = ReweightedDataset(
             train_dataset, weights=train_weights
         )
-        self.train_dataset = resampled_train_dataset
+        self.train_dataset = reweighted_train_dataset
 
         # Keep val and test dataset the same as before
 
