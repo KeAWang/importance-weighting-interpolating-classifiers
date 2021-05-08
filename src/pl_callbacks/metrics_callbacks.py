@@ -88,6 +88,7 @@ class GroupValReweightedAccuracyMonitor(Callback):
     val_preds: list
     val_targets: list
     val_groups: list
+    val_weights: list
 
     def __init__(self):
         super().__init__()
@@ -98,6 +99,7 @@ class GroupValReweightedAccuracyMonitor(Callback):
         self.val_preds = []
         self.val_targets = []
         self.val_groups = []
+        self.val_weights = []
 
     def on_train_batch_end(
         self, trainer, pl_module, outputs: List[List[dict]], *args, **kwargs
@@ -112,12 +114,14 @@ class GroupValReweightedAccuracyMonitor(Callback):
         self.val_preds.append(outputs["preds"])
         self.val_targets.append(outputs["targets"])
         self.val_groups.append(outputs["g"])
+        self.val_weights.append(outputs["w"])
 
     def on_validation_epoch_end(self, trainer, pl_module, *args, **kwargs):
         # concatenate saved tensors from each batch
         group_labels = torch.cat(self.val_groups)
         class_labels = torch.cat(self.val_targets)
         pred_labels = torch.cat(self.val_preds)
+        weights = torch.cat(self.val_weights)
 
         correct = (class_labels == pred_labels).float()
 
@@ -130,6 +134,15 @@ class GroupValReweightedAccuracyMonitor(Callback):
             pl_module.log(
                 f"val/group_{g}_acc", acc, on_step=False, on_epoch=True, prog_bar=False,
             )
+
+        val_reweighted_acc = (correct * weights).sum(0) / weights.sum(0)
+        pl_module.log(
+            "val/val_reweighted_acc",
+            val_reweighted_acc,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
 
         # compute val_acc reweighted by group counts in train set
         total_train = sum(self.train_group_counts.values())

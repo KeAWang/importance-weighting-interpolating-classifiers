@@ -91,7 +91,6 @@ class ImbalancedClassifierModel(LightningModule):
             other_data = batch._asdict()
             other_data.pop("x")
             other_data.pop("y")
-            other_data.pop("w")
         else:
             x, y = batch
             w = torch.ones_like(y)
