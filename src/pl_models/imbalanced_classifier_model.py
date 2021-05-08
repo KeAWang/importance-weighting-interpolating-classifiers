@@ -52,9 +52,9 @@ class ImbalancedClassifierModel(LightningModule):
         if freeze_features:
             print("Freezing feature extractor")
             set_grad(self.architecture, requires_grad=False)
-            set_grad(self.architecture.linear_output, requires_grad=True)
         else:
             set_grad(self.architecture, requires_grad=True)
+        set_grad(self.architecture.linear_output, requires_grad=True)
 
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
