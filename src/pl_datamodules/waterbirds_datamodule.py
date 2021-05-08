@@ -184,7 +184,8 @@ class AnnealedWaterbirdsDataModule(WaterbirdsDataModule):
         if annealing_fn is None:
 
             def annealing_fn(weights, t, T):
-                return weights ** (t / T)
+                beta = 1 - (t / T)
+                return weights ** beta
 
         self.current_epoch = 0
         self.annealing_fn = annealing_fn
