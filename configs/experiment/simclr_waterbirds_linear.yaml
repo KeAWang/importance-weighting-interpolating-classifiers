@@ -27,7 +27,7 @@ trainer:
 
 datamodule:
     resolution: [224, 224]
-    batch_size: 128
+    batch_size: 64
     num_workers: 4
     pin_memory: True
     flatten_input: False
