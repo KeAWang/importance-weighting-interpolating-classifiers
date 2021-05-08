@@ -132,17 +132,20 @@ class GroupValReweightedAccuracyMonitor(Callback):
             )
 
         # compute val_acc reweighted by group counts in train set
-        reweighted_acc = 0
-        for g, c in self.train_group_counts.items():
-            reweighted_acc += group_accs[g] * c
-        reweighted_acc /= sum(group_accs.values())
+        total_train = sum(self.train_group_counts.values())
+        if total_train > 0:  # validation sanity checks won't have any training samples
+            reweighted_acc = 0
+            for g, c in self.train_group_counts.items():
+                reweighted_acc += group_accs[g] * c
+            reweighted_acc /= total_train
 
-        print(f"Group counts in training set: {self.train_group_counts}")
-        pl_module.log(
-            "val/train_reweighted_acc",
-            reweighted_acc,
-            on_step=False,
-            on_epoch=True,
-            prog_bar=False,
-        )
+            print(f"Group counts in training set: {self.train_group_counts}")
+            pl_module.log(
+                "val/train_reweighted_acc",
+                reweighted_acc,
+                on_step=False,
+                on_epoch=True,
+                prog_bar=False,
+            )
+
         self.reset()
