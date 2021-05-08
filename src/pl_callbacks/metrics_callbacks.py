@@ -1,3 +1,4 @@
+from collections import Counter
 from pytorch_lightning.callbacks.base import Callback
 from typing import List
 import torch
@@ -80,3 +81,68 @@ class GroupValAccuracyMonitor(GroupAccuracyMonitor):
 
     def on_validation_epoch_end(self, trainer, pl_module, *args, **kwargs):
         self.on_epoch_end_shared(pl_module)
+
+
+class GroupValReweightedAccuracyMonitor(Callback):
+    train_group_counts: Counter
+    val_preds: list
+    val_targets: list
+    val_groups: list
+
+    def __init__(self):
+        super().__init__()
+        self.reset()
+
+    def reset(self):
+        self.train_group_counts = Counter()
+        self.val_preds = []
+        self.val_targets = []
+        self.val_groups = []
+
+    def on_train_batch_end(
+        self, trainer, pl_module, outputs: List[List[dict]], *args, **kwargs
+    ):
+        assert len(outputs) == 1
+        assert len(outputs[0]) == 1
+        outputs = outputs[0][0]["extra"]
+        self.train_group_counts += Counter(outputs["g"].tolist())
+
+    def on_validation_batch_end(self, trainer, pl_module, outputs, *args, **kwargs):
+        """Gather data from single batch."""
+        self.val_preds.append(outputs["preds"])
+        self.val_targets.append(outputs["targets"])
+        self.val_groups.append(outputs["g"])
+
+    def on_validation_epoch_end(self, trainer, pl_module, *args, **kwargs):
+        # concatenate saved tensors from each batch
+        group_labels = torch.cat(self.val_groups)
+        class_labels = torch.cat(self.val_targets)
+        pred_labels = torch.cat(self.val_preds)
+
+        correct = (class_labels == pred_labels).float()
+
+        group_accs = {}
+        for g in torch.unique(group_labels).tolist():
+            in_g = group_labels == g
+            acc = correct[in_g].mean().item()
+            group_accs[g] = acc
+
+            pl_module.log(
+                f"val/group_{g}_acc", acc, on_step=False, on_epoch=True, prog_bar=False,
+            )
+
+        # compute val_acc reweighted by group counts in train set
+        reweighted_acc = 0
+        for g, c in self.train_group_counts.items():
+            reweighted_acc += group_accs[g] * c
+        reweighted_acc /= sum(group_accs.values())
+
+        print(f"Group counts in training set: {self.train_group_counts}")
+        pl_module.log(
+            "val/train_reweighted_acc",
+            reweighted_acc,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
+        self.reset()
