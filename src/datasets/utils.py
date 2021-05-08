@@ -296,8 +296,8 @@ class ResampledDataset(Dataset):
 
 def undersampling_schedule(weights: torch.Tensor, T: int, annealing_fn: Callable):
     weights = weights / torch.max(weights)
+    rv = torch.rand(*weights.shape)
     for t in range(T + 1):
-        rv = torch.rand(*weights.shape)
 
         keep_idx = rv <= annealing_fn(weights, t, T)
         idx = torch.nonzero(keep_idx, as_tuple=True)[0]
