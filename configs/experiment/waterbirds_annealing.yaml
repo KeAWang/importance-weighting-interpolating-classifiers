@@ -28,7 +28,8 @@ trainer:
 datamodule:
     _target_: src.pl_datamodules.waterbirds_datamodule.AnnealedWaterbirdsDataModule
     num_epochs: ${trainer.max_epochs}
-    annealing_fn: null
+    annealing_fn: linear
+    annealing_params: []
 
     resolution: [224, 224]
     batch_size: 64

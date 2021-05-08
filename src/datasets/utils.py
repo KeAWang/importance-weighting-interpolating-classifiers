@@ -294,14 +294,34 @@ class ResampledDataset(Dataset):
         return len(self.indices)
 
 
-def undersampling_schedule(weights: torch.Tensor, T: int, annealing_fn: Callable):
+def undersampling_schedule(
+    weights: torch.Tensor, T: int, annealing_fn: str, annealing_params: tuple,
+):
+    import math
+
+    if annealing_fn == "linear":
+
+        def beta(x):
+            return x
+
+    elif annealing_fn == "sigmoid":
+
+        def beta(x):
+            return 1 / math.exp(-annealing_params[0] * (x - 0.5))
+
+    else:
+        raise ValueError(f"Annealing function {annealing_fn} not supported")
+
+    def g(weights, t, T):
+        return weights ** (1 - beta(t / T))
+
     weights = weights / torch.max(weights)
     rv = torch.rand(*weights.shape)
     for t in range(T + 1):
 
-        keep_idx = rv <= annealing_fn(weights, t, T)
+        keep_idx = rv <= g(weights, t, T)
         idx = torch.nonzero(keep_idx, as_tuple=True)[0]
 
-        weights_t = weights[idx] / annealing_fn(weights[keep_idx], t, T)
+        weights_t = weights[idx] / g(weights[keep_idx], t, T)
 
         yield idx, weights_t
