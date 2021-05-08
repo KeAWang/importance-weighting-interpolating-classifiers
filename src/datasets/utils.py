@@ -2,7 +2,8 @@ from collections import namedtuple, defaultdict
 from torch.utils.data import Dataset
 from torch import Generator
 import torch
-from typing import Sequence, Optional, Dict, Union, Callable
+import numpy as np
+from typing import Sequence, Optional, Dict, Union
 
 
 LabeledDatapoint = namedtuple(
@@ -297,23 +298,27 @@ class ResampledDataset(Dataset):
 def undersampling_schedule(
     weights: torch.Tensor, T: int, annealing_fn: str, annealing_params: tuple,
 ):
-    import math
 
     if annealing_fn == "linear":
 
-        def beta(x):
-            return x
+        def g(weights, t, T):
+            return weights ** (1 - t / T)
 
     elif annealing_fn == "sigmoid":
 
-        def beta(x):
-            return 1 / math.exp(-annealing_params[0] * (x - 0.5))
+        def sigmoid(x):
+            return np.where(
+                x >= 0, 1 / (1 + np.exp(-x)), np.exp(x) / (1 + np.exp(x))
+            ).item()
+
+        c = annealing_params[0]
+
+        def g(weights, t, T):
+            x = t / T
+            return weights ** sigmoid(-c * (x - 0.5))
 
     else:
         raise ValueError(f"Annealing function {annealing_fn} not supported")
-
-    def g(weights, t, T):
-        return weights ** (1 - beta(t / T))
 
     weights = weights / torch.max(weights)
     rv = torch.rand(*weights.shape)
