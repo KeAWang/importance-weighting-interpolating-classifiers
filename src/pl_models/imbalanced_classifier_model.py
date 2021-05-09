@@ -33,11 +33,6 @@ class ImbalancedClassifierModel(LightningModule):
 
         self.loss_fn = hydra.utils.instantiate(loss_fn, reduction="none")
 
-        # Load weights if needed
-        if ckpt_path is not None:
-            ckpt = torch.load(ckpt_path)
-            self.load_state_dict(ckpt["state_dict"])
-
         # Replace linear layer with new linear layer with possibly differ number of classes
         in_features = self.architecture.linear_output.in_features
         new_out = output_size
@@ -48,6 +43,11 @@ class ImbalancedClassifierModel(LightningModule):
         )
         self.architecture.linear_output.bias = torch.nn.Parameter(torch.Tensor(new_out))
         self.architecture.linear_output.reset_parameters()
+
+        # Load weights if needed
+        if ckpt_path is not None:
+            ckpt = torch.load(ckpt_path)
+            self.load_state_dict(ckpt["state_dict"])
 
         if freeze_features:
             print("Freezing feature extractor")
