@@ -317,6 +317,11 @@ def undersampling_schedule(
             x = t / T
             return weights ** sigmoid(-c * (x - 0.5))
 
+    elif annealing_fn == "step":
+
+        def g(weights, t, T):
+            return torch.ones_like(weights) if t > T // 2 else weights
+
     else:
         raise ValueError(f"Annealing function {annealing_fn} not supported")
 
