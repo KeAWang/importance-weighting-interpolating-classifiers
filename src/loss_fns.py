@@ -107,7 +107,8 @@ class LogitAdjustedLoss(nn.Module):
         adjustments = torch.as_tensor(adjustments, dtype=torch.get_default_dtype())
         self.register_buffer("adjustments", adjustments)
         self.register_buffer("weight", weight)
-        assert self.margins.shape == self.weight.shape
+        if self.weight is not None:
+            assert self.adjustments.shape == self.weight.shape
 
     def forward(self, logits, target):
         # follows the interface of torch.nn.CrossEntropyLoss.forward
@@ -116,7 +117,9 @@ class LogitAdjustedLoss(nn.Module):
         assert logits.shape[-1] == len(self.adjustments)
         # mask[i,j] = 1 if target[i] == j else 0
         mask = torch.nn.functional.one_hot(target, num_classes=logits.shape[-1])
-        adjusted_logits = logits + self.temperature * self.margins.reshape(1, -1) * mask
+        adjusted_logits = (
+            logits + self.temperature * self.adjustments.reshape(1, -1) * mask
+        )
         return F.cross_entropy(
             adjusted_logits, target, weight=self.weight, reduction=self.reduction,
         )
