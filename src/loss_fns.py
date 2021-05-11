@@ -103,7 +103,7 @@ class LogitAdjustedLoss(nn.Module):
                 f"num_per_class must be set to initialize {self.__class__}"
             )
         num_per_class = np.array(num_per_class)
-        adjustments = num_per_class / num_per_class.sum(0)
+        adjustments = np.log(num_per_class / num_per_class.sum(0))
         adjustments = torch.as_tensor(adjustments, dtype=torch.get_default_dtype())
         self.register_buffer("adjustments", adjustments)
         self.register_buffer("weight", weight)
@@ -115,11 +115,7 @@ class LogitAdjustedLoss(nn.Module):
         assert logits.ndim == 2
         assert target.ndim == 1
         assert logits.shape[-1] == len(self.adjustments)
-        # mask[i,j] = 1 if target[i] == j else 0
-        mask = torch.nn.functional.one_hot(target, num_classes=logits.shape[-1])
-        adjusted_logits = (
-            logits + self.temperature * self.adjustments.reshape(1, -1) * mask
-        )
+        adjusted_logits = logits + self.temperature * self.adjustments.reshape(1, -1)
         return F.cross_entropy(
             adjusted_logits, target, weight=self.weight, reduction=self.reduction,
         )
