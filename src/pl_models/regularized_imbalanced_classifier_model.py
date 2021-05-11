@@ -20,6 +20,7 @@ class RegularizedImbalancedClassifierModel(LightningModule):
         ckpt_path: Optional[str],
         output_size: int,
         reference_regularization: float,
+        reinit: bool,
         **unused_kwargs,
     ):
         super().__init__()
@@ -46,6 +47,7 @@ class RegularizedImbalancedClassifierModel(LightningModule):
         self.architecture.linear_output.bias = torch.nn.Parameter(torch.Tensor(new_out))
         self.architecture.linear_output.reset_parameters()
 
+        old_state_dict = deepcopy(self.architecture.state_dict())
         # Load weights if needed
         if ckpt_path is not None:
             print(f"Loading from checkpoint path {ckpt_path}")
@@ -63,6 +65,8 @@ class RegularizedImbalancedClassifierModel(LightningModule):
         set_grad(self.reference_architecture, requires_grad=False)
         self.reference_regularization = reference_regularization
 
+        if reinit:
+            self.architecture.load_state_dict(old_state_dict)
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
         self.train_accuracy = Accuracy()

@@ -2,3 +2,4 @@ _target_: src.pl_models.regularized_imbalanced_classifier_model.RegularizedImbal
 freeze_features: False
 ckpt_path: null
 reference_regularization: 1.0
+reinit: False
