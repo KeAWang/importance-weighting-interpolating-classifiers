@@ -12,7 +12,7 @@ defaults:
 
 logger:
     wandb:
-        tags: ["binary", "waterbirds", "reference-regularization"]
+        tags: ["binary", "waterbirds", "reference-regularization", "annealing"]
 
 load_wandb_run: ["kealexanderwang", "importance-reweighing", "waterbirds-undersampled-322", "last.ckpt"]
 
@@ -25,6 +25,7 @@ callbacks:
 trainer:
     min_epochs: 1
     max_epochs: 25
+    reload_dataloaders_every_epoch: True
 
 datamodule:
     _target_: src.pl_datamodules.waterbirds_datamodule.AnnealedWaterbirdsDataModule
