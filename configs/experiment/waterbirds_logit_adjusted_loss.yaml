@@ -1,0 +1,40 @@
+# @package _global_
+
+defaults:
+    - /datamodule: waterbirds_datamodule.yaml
+    - /model: imbalanced_classifier_model.yaml
+    - /optimizer: sgd.yaml                    
+    - /architecture: res_net.yaml                 
+    - /loss_fn: logit_adjusted_loss.yaml
+
+logger:
+    wandb:
+        tags: ["binary", "waterbirds", "logit-adjusted-loss"]
+
+callbacks:
+    group_train_accuracy_monitor:
+        _target_: src.pl_callbacks.metrics_callbacks.GroupTrainAccuracyMonitor
+    group_val_accuracy_monitor:
+        _target_: src.pl_callbacks.metrics_callbacks.GroupValReweightedAccuracyMonitor
+
+trainer:
+    min_epochs: 1
+    max_epochs: 50
+
+datamodule:
+    resolution: [224, 224]
+    batch_size: 64
+    num_workers: 4
+    pin_memory: True
+    flatten_input: False
+
+optimizer:
+    lr: 0.001
+    momentum: 0.9
+    weight_decay: 0.0001
+
+architecture:
+    arch: resnet50
+
+loss_fn:
+    num_per_class: [3682, 1113]  # TODO: automatically calculate this
