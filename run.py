@@ -2,6 +2,27 @@ import dotenv
 import hydra
 from omegaconf import DictConfig
 
+
+def set_personal_dir_from_hostname():
+    from pathlib import Path
+    import platform
+
+    import os
+    import pwd
+
+    username = pwd.getpwuid(os.getuid())[0]
+
+    machine_name = platform.node().split(".")[0]
+    local_dir = Path(f"/{machine_name}")
+    for scr in ["scr0", "scr1", "scr", "scr2"]:
+        personal_dir = local_dir / scr / username
+        if personal_dir.exists():
+            break
+    os.environ["PERSONAL_DIR"] = str(personal_dir)
+    return
+
+
+set_personal_dir_from_hostname()
 # load environment variables from `.env` file if it exists
 dotenv.load_dotenv(override=True)
 

@@ -3,4 +3,4 @@ arch: null
 input_size: [3, 224, 224]
 output_size: null
 pretrained: True
-ckpt_dir: ${oc.env:SIMCLR_CKPT_DIR}
+ckpt_dir: ${oc.env:TORCHVISION_CKPT_DIR}

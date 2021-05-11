@@ -49,11 +49,13 @@ class CelebADataModule(BaseDataModule):
         Do not use it to assign state (self.x = y)."""
 
         dataset_dir = self.data_dir / CelebADataset.base_folder
-        if not dataset_dir.exists():
+        file_path = self.data_dir / "celeba.tar.gz"
+        if not file_path.exists():
             print("Downloading CelebA dataset...")
             url = "https://worksheets.codalab.org/rest/bundles/0x886412315184400c9983b32846e91ab1/contents/blob/"
-            file_path = self.data_dir / "celeba.tar.gz"
             urllib.request.urlretrieve(url, file_path)
+        elif not dataset_dir.exists():
+            print("Extracting celeba.tar.gz")
             with tarfile.open(file_path) as file:
                 file.extractall(dataset_dir)
 

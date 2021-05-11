@@ -48,11 +48,13 @@ class WaterbirdsDataModule(BaseDataModule):
         Do not use it to assign state (self.x = y)."""
 
         dataset_dir = self.data_dir / WaterbirdsDataset.base_folder
-        if not dataset_dir.exists():
+        file_path = self.data_dir / "waterbirds.tar.gz"
+        if not file_path.exists():
             print("Downloading Waterbirds dataset...")
             url = "https://worksheets.codalab.org/rest/bundles/0xb922b6c2d39c48bab4516780e06d5649/contents/blob/"
-            file_path = self.data_dir / "waterbirds.tar.gz"
             urllib.request.urlretrieve(url, file_path)
+        elif not dataset_dir.exists():
+            print("Extracting waterbirds.tar.gz")
             with tarfile.open(file_path) as file:
                 file.extractall(dataset_dir)
 
