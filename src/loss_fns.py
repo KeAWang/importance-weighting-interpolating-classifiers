@@ -83,3 +83,40 @@ class LDAMLoss(nn.Module):
             weight=self.weight,
             reduction=self.reduction,
         )
+
+
+class LogitAdjustedLoss(nn.Module):
+    def __init__(
+        self,
+        weight: Optional[torch.Tensor],
+        num_per_class: List[int],
+        temperature: float,
+        reduction: str,
+    ):
+        super().__init__()
+        assert temperature > 0
+        self.temperature = temperature
+        self.reduction = reduction
+
+        if num_per_class is None:
+            raise ValueError(
+                f"num_per_class must be set to initialize {self.__class__}"
+            )
+        num_per_class = np.array(num_per_class)
+        adjustments = num_per_class / num_per_class.sum(0)
+        adjustments = torch.as_tensor(adjustments, dtype=torch.get_default_dtype())
+        self.register_buffer("adjustments", adjustments)
+        self.register_buffer("weight", weight)
+        assert self.margins.shape == self.weight.shape
+
+    def forward(self, logits, target):
+        # follows the interface of torch.nn.CrossEntropyLoss.forward
+        assert logits.ndim == 2
+        assert target.ndim == 1
+        assert logits.shape[-1] == len(self.adjustments)
+        # mask[i,j] = 1 if target[i] == j else 0
+        mask = torch.nn.functional.one_hot(target, num_classes=logits.shape[-1])
+        adjusted_logits = logits + self.temperature * self.margins.reshape(1, -1) * mask
+        return F.cross_entropy(
+            adjusted_logits, target, weight=self.weight, reduction=self.reduction,
+        )

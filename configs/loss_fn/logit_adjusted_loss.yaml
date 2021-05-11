@@ -1,0 +1,4 @@
+_target_: src.loss_fns.LogitAdjustedLoss
+num_per_class: []
+temperature: 1.
+weight: null
