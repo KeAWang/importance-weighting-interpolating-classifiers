@@ -20,6 +20,7 @@ class RegularizedImbalancedClassifierModel(LightningModule):
         ckpt_path: Optional[str],
         output_size: int,
         reference_regularization: float,
+        regularization_type: str,
         reinit: bool,
         **unused_kwargs,
     ):
@@ -65,6 +66,8 @@ class RegularizedImbalancedClassifierModel(LightningModule):
         set_grad(self.reference_architecture, requires_grad=False)
         self.reference_regularization = reference_regularization
 
+        self.regularization_type = regularization_type
+
         if reinit:
             self.architecture.load_state_dict(old_state_dict)
         # use separate metric instance for train, val and test step
@@ -109,12 +112,20 @@ class RegularizedImbalancedClassifierModel(LightningModule):
         logits, reference_logits = self.forward(x), self.reference_architecture(x)
         loss = self.loss_fn(logits, y)
         reweighted_loss = (loss * w).sum(0) / w.sum(0)
-        kl = (
-            -(reference_logits.softmax(dim=-1) * logits.log_softmax(dim=-1))
-            .sum(-1)
-            .mean(0)
-        )
-        total_loss = reweighted_loss + self.reference_regularization * kl
+        if self.regularization_type == "logits":
+            kl = (
+                -(reference_logits.softmax(dim=-1) * logits.log_softmax(dim=-1))
+                .sum(-1)
+                .mean(0)
+            )
+            reg_term = kl
+        elif self.regularization_type == "weights":
+            learned_params, ref_params = match_flattened_params(
+                self.architecture, self.reference_architecture
+            )
+            l2 = (learned_params - ref_params).pow(2).mean(0)
+            reg_term = l2
+        total_loss = reweighted_loss + self.reference_regularization * reg_term
         preds = torch.argmax(logits, dim=-1)
         return total_loss, logits, preds, y, other_data
 
@@ -187,3 +198,17 @@ class RegularizedImbalancedClassifierModel(LightningModule):
 def set_grad(module: torch.nn.Module, requires_grad):
     for param in module.parameters():
         param.requires_grad = requires_grad
+
+
+def match_flattened_params(module1, module2):
+    params1 = dict(module1.named_parameters())
+    params2 = dict(module2.named_parameters())
+    assert set(params1.keys()) == set(params2.keys())
+    p_list1 = []
+    p_list2 = []
+    for n in params1:
+        p1 = params1[n].flatten()
+        p2 = params2[n].flatten()
+        p_list1.append(p1)
+        p_list2.append(p2)
+    return torch.cat(p_list1), torch.cat(p_list2)
