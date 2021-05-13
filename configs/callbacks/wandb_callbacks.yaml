@@ -1,5 +1,5 @@
-#defaults:
-#    - default_callbacks.yaml
+defaults:
+    - default_callbacks.yaml
 
 
 watch_model_with_wandb:

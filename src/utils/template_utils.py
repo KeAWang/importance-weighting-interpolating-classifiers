@@ -70,6 +70,12 @@ def extras(config: DictConfig) -> None:
                 if any(subword in callback.lower() for subword in blacklist):
                     del config["callbacks"][callback]
 
+    if (
+        config["callbacks"].get("model_checkpoint")
+        and not config.trainer["checkpoint_callback"]
+    ):
+        del config["callbacks"]["model_checkpoint"]
+
     # Append extra_tags to wandb tags. Extra_tags can now be specified in commandline
     # without overwriting old tags
     if (
