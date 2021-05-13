@@ -123,7 +123,7 @@ class RegularizedImbalancedClassifierModel(LightningModule):
             learned_params, ref_params = match_flattened_params(
                 self.architecture, self.reference_architecture
             )
-            l2 = (learned_params - ref_params).pow(2).mean(0)
+            l2 = (learned_params - ref_params).pow(2).sum(0)
             reg_term = l2
         total_loss = reweighted_loss + self.reference_regularization * reg_term
         preds = torch.argmax(logits, dim=-1)

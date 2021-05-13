@@ -126,14 +126,23 @@ class GroupValReweightedAccuracyMonitor(Callback):
         correct = (class_labels == pred_labels).float()
 
         group_accs = {}
+        worst_acc = float("inf")
         for g in torch.unique(group_labels).tolist():
             in_g = group_labels == g
             acc = correct[in_g].mean().item()
             group_accs[g] = acc
+            worst_acc = min(worst_acc, acc)
 
             pl_module.log(
                 f"val/group_{g}_acc", acc, on_step=False, on_epoch=True, prog_bar=False,
             )
+        pl_module.log(
+            "val/worst_group_acc",
+            worst_acc,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
 
         val_reweighted_acc = (correct * weights).sum(0) / weights.sum(0)
         pl_module.log(
