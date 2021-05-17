@@ -2,7 +2,7 @@ import torch
 import urllib.request
 import tarfile
 
-from typing import Tuple, Callable, Optional
+from typing import Tuple, Callable
 from math import prod
 from .base_datamodule import BaseDataModule
 from torch.utils.data import DataLoader, Subset

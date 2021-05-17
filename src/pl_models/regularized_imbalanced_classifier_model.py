@@ -111,7 +111,9 @@ class RegularizedImbalancedClassifierModel(LightningModule):
             other_data = {}
         logits, reference_logits = self.forward(x), self.reference_architecture(x)
         loss = self.loss_fn(logits, y)
-        reweighted_loss = (loss * w).sum(0) / w.sum(0)
+        reweighted_loss = (loss * w).sum(0) / w.sum(
+            0
+        )  # TODO: don't divide by sum of weights?
         if self.regularization_type == "logits":
             kl = (
                 -(reference_logits.softmax(dim=-1) * logits.log_softmax(dim=-1))
