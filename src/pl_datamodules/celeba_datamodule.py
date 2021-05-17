@@ -5,9 +5,15 @@ import tarfile
 from typing import Tuple, List
 from math import prod
 from .base_datamodule import BaseDataModule
+from torch.utils.data import DataLoader, Subset
 from torchvision.transforms import transforms
 from ..datasets.celeba_dataset import CelebADataset
-from ..datasets.utils import ResampledDataset, UndersampledDataset, ReweightedDataset
+from ..datasets.utils import (
+    ResampledDataset,
+    UndersampledDataset,
+    ReweightedDataset,
+    undersampling_schedule,
+)
 from collections import Counter
 
 
@@ -114,10 +120,10 @@ class ReweightedCelebADataModule(CelebADataModule):
         group_weight_map = {g: 1 / count for g, count in self.train_g_counter.items()}
         for g, weight in group_weight_map.items():
             train_weights[train_dataset.group_array == g] *= weight
-        resampled_train_dataset = ReweightedDataset(
+        reweighted_train_dataset = ReweightedDataset(
             train_dataset, weights=train_weights
         )
-        self.train_dataset = resampled_train_dataset
+        self.train_dataset = reweighted_train_dataset
 
         # Keep val and test dataset the same as before
 
@@ -163,6 +169,8 @@ class UndersampledCelebADataModule(CelebADataModule):
         print(f"Dataset classes were undersampled to {self.train_y_counter}")
         print(f"Dataset groups were undersampled to {self.train_g_counter}")
 
+        # Keep val and test dataset the same as before
+
 
 def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: bool):
     orig_w = 178
@@ -192,3 +200,48 @@ def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: 
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
         ]
     return transforms_list
+
+
+class AnnealedCelebADataModule(CelebADataModule):
+    def __init__(
+        self,
+        annealing_fn: str,
+        num_epochs: int,
+        annealing_params: list,
+        *args,
+        **kwargs,
+    ):
+        super().__init__(*args, **kwargs)
+
+        self.current_epoch = 0
+        self.annealing_fn = annealing_fn
+        self.annealing_params = tuple(annealing_params)
+        self.num_epochs = num_epochs
+
+    def setup(self, stage=None):
+        super().setup(stage=stage)
+        # Compute weights
+        train_dataset = self.train_dataset
+        train_weights = torch.ones(len(train_dataset))
+        group_weight_map = {g: 1 / count for g, count in self.train_g_counter.items()}
+        for g, weight in group_weight_map.items():
+            train_weights[train_dataset.group_array == g] *= weight
+
+        self.annealed_train_datasets = list(
+            ReweightedDataset(Subset(train_dataset, idxs), ws)
+            for idxs, ws in undersampling_schedule(
+                train_weights, self.num_epochs, self.annealing_fn, self.annealing_params
+            )
+        )
+
+    def train_dataloader(self):
+        dataset = self.annealed_train_datasets[self.current_epoch]
+        # NOTE: Must use with Trainer.reload_dataloaders_every_epoch = True
+        self.current_epoch += 1
+        return DataLoader(
+            dataset=dataset,
+            batch_size=self.batch_size,
+            num_workers=self.num_workers,
+            pin_memory=self.pin_memory,
+            shuffle=True,
+        )
