@@ -141,14 +141,19 @@ class RegularizedImbalancedClassifierModel(LightningModule):
             l2 = (learned_params - ref_params).pow(2).sum(0)
             reg_term = l2
         total_loss = reweighted_loss + self.reference_regularization * reg_term
-        return total_loss, logits, preds, y, other_data
+        return (total_loss, reweighted_loss, reg_term), logits, preds, y, other_data
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
-        loss, logits, preds, targets, other_data = self.step(batch)
+        losses, logits, preds, targets, other_data = self.step(batch)
+        loss, ce_term, reg_term = losses
 
         # log train metrics
         acc = self.train_accuracy(preds, targets)
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
+        self.log("train/ce_term", ce_term, on_step=False, on_epoch=True, prog_bar=False)
+        self.log(
+            "train/reg_term", reg_term, on_step=False, on_epoch=True, prog_bar=False
+        )
         self.log("train/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
 
         # we can return here dict with any tensors
@@ -176,13 +181,17 @@ class RegularizedImbalancedClassifierModel(LightningModule):
         self.log("train/loss_best", min(self.metric_hist["train/loss"]), prog_bar=False)
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, logits, preds, targets, other_data = self.step(batch)
+        losses, logits, preds, targets, other_data = self.step(batch)
+        loss, ce_term, reg_term = losses
+
         num_examples = len(targets)
         num_pos_pred = (preds == 1).sum().item()
 
         # log val metrics
         acc = self.val_accuracy(preds, targets)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
+        self.log("val/ce_term", ce_term, on_step=False, on_epoch=True, prog_bar=False)
+        self.log("val/reg_term", reg_term, on_step=False, on_epoch=True, prog_bar=False)
         self.log("val/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
 
         return {
