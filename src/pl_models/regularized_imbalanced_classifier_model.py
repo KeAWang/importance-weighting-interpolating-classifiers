@@ -22,6 +22,7 @@ class RegularizedImbalancedClassifierModel(LightningModule):
         reference_regularization: float,
         regularization_type: str,
         reinit: bool,
+        only_update_misclassified: bool,
         **unused_kwargs,
     ):
         super().__init__()
@@ -72,6 +73,8 @@ class RegularizedImbalancedClassifierModel(LightningModule):
             self.architecture.load_state_dict(old_state_dict)
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
+        self.only_update_misclassified = only_update_misclassified
+
         self.train_accuracy = Accuracy()
         self.val_accuracy = Accuracy()
 
@@ -110,10 +113,20 @@ class RegularizedImbalancedClassifierModel(LightningModule):
             w = torch.ones_like(y)
             other_data = {}
         logits, reference_logits = self.forward(x), self.reference_architecture(x)
+        preds = torch.argmax(logits, dim=-1)
         loss = self.loss_fn(logits, y)
-        reweighted_loss = (loss * w).sum(0) / w.sum(
-            0
-        )  # TODO: don't divide by sum of weights?
+        # TODO: do we need to change the normalization?
+        if self.only_update_misclassified:
+            # This will rescale to reflect the changed effective batch size
+            correct = preds != y
+            w = w * correct.float()
+            reweighted_loss = (loss * w).sum(0) / (w.sum(0) + 1e-5)
+
+            # This will not rescale
+            # reweighted_loss = (loss * w * (preds != y).float()).sum(0) / w.sum(0)
+        else:
+            reweighted_loss = (loss * w).sum(0) / w.sum(0)
+
         if self.regularization_type == "logits":
             kl = (
                 -(reference_logits.softmax(dim=-1) * logits.log_softmax(dim=-1))
@@ -128,7 +141,6 @@ class RegularizedImbalancedClassifierModel(LightningModule):
             l2 = (learned_params - ref_params).pow(2).sum(0)
             reg_term = l2
         total_loss = reweighted_loss + self.reference_regularization * reg_term
-        preds = torch.argmax(logits, dim=-1)
         return total_loss, logits, preds, y, other_data
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:

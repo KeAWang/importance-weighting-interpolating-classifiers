@@ -18,6 +18,7 @@ class ImbalancedClassifierModel(LightningModule):
         freeze_features: bool,
         ckpt_path: Optional[str],
         output_size: int,
+        only_update_misclassified: bool,
         **unused_kwargs,
     ):
         super().__init__()
@@ -56,6 +57,7 @@ class ImbalancedClassifierModel(LightningModule):
             set_grad(self.architecture, requires_grad=True)
         set_grad(self.architecture.linear_output, requires_grad=True)
 
+        self.only_update_misclassified = only_update_misclassified
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
         self.train_accuracy = Accuracy()
@@ -96,9 +98,18 @@ class ImbalancedClassifierModel(LightningModule):
             w = torch.ones_like(y)
             other_data = {}
         logits = self.forward(x)
-        loss = self.loss_fn(logits, y)
-        reweighted_loss = (loss * w).sum(0) / w.sum(0)
         preds = torch.argmax(logits, dim=-1)
+        loss = self.loss_fn(logits, y)
+        # TODO: do we need to change the normalization?
+        if self.only_update_misclassified:
+            # This will rescale to reflect the changed effective batch size
+            # w = w * (preds != y)
+            # reweighted_loss = (loss * w).sum(0) / w.sum(0)
+
+            # This will not rescale
+            reweighted_loss = (loss * w * (preds != y)).sum(0) / w.sum(0)
+        else:
+            reweighted_loss = (loss * w).sum(0) / w.sum(0)
         return reweighted_loss, logits, preds, y, other_data
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:

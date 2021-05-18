@@ -4,3 +4,4 @@ ckpt_path: null
 reference_regularization: 1.0
 regularization_type: "logits"
 reinit: False
+only_update_misclassified: False
