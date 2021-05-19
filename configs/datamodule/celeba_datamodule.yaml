@@ -1,4 +1,7 @@
-_target_: src.pl_datamodules.celeba_datamodule.CelebADataModule
+_target_: src.pl_datamodules.utils.make_datamodule
+group_datamodule_cls_name: CelebADataModule
+wrapper_type: null
+
 # class labels:
 # 0 : TODO
 # 1 : TODO

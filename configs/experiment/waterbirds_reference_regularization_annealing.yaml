@@ -6,8 +6,8 @@
 defaults:
     - /datamodule: waterbirds_datamodule.yaml
     - /model: regularized_imbalanced_classifier_model.yaml
-    - /optimizer: sgd.yaml                    
-    - /architecture: res_net.yaml                 
+    - /optimizer: sgd.yaml
+    - /architecture: res_net.yaml
     - /loss_fn: cross_entropy.yaml
 
 logger:
@@ -29,6 +29,7 @@ trainer:
 
 datamodule:
     _target_: src.pl_datamodules.waterbirds_datamodule.AnnealedWaterbirdsDataModule
+    wrapper_type: annealed
     num_epochs: ${trainer.max_epochs}
     annealing_fn: linear
     annealing_params: []

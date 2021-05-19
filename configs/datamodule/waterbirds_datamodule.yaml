@@ -1,4 +1,7 @@
-_target_: src.pl_datamodules.waterbirds_datamodule.WaterbirdsDataModule
+_target_: src.pl_datamodules.utils.make_datamodule
+group_datamodule_cls_name: WaterbirdsDataModule
+wrapper_type: null
+
 # class labels:
 # 0 : landbird
 # 1 : waterbird

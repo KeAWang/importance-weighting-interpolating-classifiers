@@ -2,6 +2,8 @@ from typing import Optional
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 from pathlib import Path
+from collections import Counter
+import torch
 
 
 class BaseDataModule(LightningDataModule):
@@ -76,3 +78,20 @@ class BaseDataModule(LightningDataModule):
             return None
 
     # End PyTorch Lightning interface
+
+
+class GroupDataModule(BaseDataModule):
+    def compute_weights(self, dataset):
+        assert hasattr(dataset, "y_array")
+        assert hasattr(dataset, "group_array")
+        y_counter, g_counter = self.count(dataset)
+        weights = torch.ones(len(dataset))
+        group_weight_map = {g: 1 / count for g, count in g_counter.items()}
+        for g, weight in group_weight_map.items():
+            weights[dataset.group_array == g] *= weight
+        return y_counter, g_counter, weights
+
+    def count(self, dataset):
+        y_counter = Counter(dataset.y_array.tolist())
+        g_counter = Counter(dataset.group_array.tolist())
+        return y_counter, g_counter

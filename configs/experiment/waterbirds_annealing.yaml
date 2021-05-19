@@ -26,7 +26,7 @@ trainer:
     reload_dataloaders_every_epoch: True
 
 datamodule:
-    _target_: src.pl_datamodules.waterbirds_datamodule.AnnealedWaterbirdsDataModule
+    wrapper_type: annealed
     num_epochs: ${trainer.max_epochs}
     annealing_fn: linear
     annealing_params: []
