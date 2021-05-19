@@ -1,6 +1,10 @@
 # import these datamodule for getattr later
 from .waterbirds_datamodule import WaterbirdsDataModule
 from .celeba_datamodule import CelebADataModule
+from .imbalanced_cifar_datamodule import (
+    ImbalancedCIFAR10DataModule,
+    ImbalancedCIFAR100DataModule,
+)
 
 from .base_datamodule import GroupDataModule
 from torch.utils.data import DataLoader, Subset
