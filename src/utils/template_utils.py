@@ -95,6 +95,20 @@ def extras(config: DictConfig) -> None:
             raise ValueError(f"Desired checkpoint path {ckpt_path} does not exist!")
         config.model["ckpt_path"] = ckpt_path
 
+    if config.get("load_reference_wandb_run"):
+        user, project, run_name, reference_ckpt_name = config[
+            "load_reference_wandb_run"
+        ]
+        query = {"displayName": {"$eq": run_name}}
+        _, prev_config = get_config(user=user, project=project, query=query)[0]
+        run_dir = prev_config["run_dir"]
+        reference_ckpt_path = f"{run_dir}/checkpoints/{reference_ckpt_name}"  # Note: update to correct directory structure if it changes
+        if not os.path.exists(reference_ckpt_path):
+            raise ValueError(
+                f"Desired checkpoint path {reference_ckpt_path} does not exist!"
+            )
+        config.model["reference_ckpt_path"] = reference_ckpt_path
+
     # Disable adding new keys to config
     OmegaConf.set_struct(config, True)
 

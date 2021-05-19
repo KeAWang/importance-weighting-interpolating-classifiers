@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, Sequence, Tuple, Union, Optional
+from copy import deepcopy
 
 import hydra
 import torch
@@ -13,12 +14,15 @@ class ImbalancedClassifierModel(LightningModule):
     def __init__(
         self,
         architecture: torch.nn.Module,
-        optimizer: DictConfig,
+        optimizer_config: DictConfig,
         loss_fn: DictConfig,
         freeze_features: bool,
         ckpt_path: Optional[str],
+        reference_ckpt_path: Optional[str],
         output_size: int,
+        reference_regularization: float,
         only_update_misclassified: bool,
+        regularization_type: Optional[str],
         **unused_kwargs,
     ):
         super().__init__()
@@ -28,7 +32,14 @@ class ImbalancedClassifierModel(LightningModule):
 
         # this line ensures params passed to LightningModule will be saved to ckpt
         # it also allows to access params with 'self.hparams' attribute
-        self.save_hyperparameters()
+        # self.save_hyperparameters()
+        # However this will cause the pytorch lightning saved state_dict to contain a
+        # field called "hyper_parameters" which will be a copy of everything passed into
+        # the LightningModule. This is not good for example, if we pass in an
+        # architecture since it adds extra memory costs and requires the class
+        # definition for the architecture when loading the checkpoint with torch.load
+
+        self.optimizer_config = optimizer_config
 
         self.architecture = architecture
 
@@ -45,10 +56,30 @@ class ImbalancedClassifierModel(LightningModule):
         self.architecture.linear_output.bias = torch.nn.Parameter(torch.Tensor(new_out))
         self.architecture.linear_output.reset_parameters()
 
-        # Load weights if needed
+        self.reference_regularization = reference_regularization
+        self.regularization_type = regularization_type
+        if regularization_type is None:
+            self.reference_architecture = None
+        else:
+            self.reference_architecture = deepcopy(self.architecture)
+            set_grad(self.reference_architecture, requires_grad=False)
+            if reference_ckpt_path is None and ckpt_path is not None:
+                reference_ckpt_path = ckpt_path
+            if reference_ckpt_path is not None:
+                print(f"Loading from reference checkpoint path {reference_ckpt_path}")
+                reference_ckpt = torch.load(
+                    reference_ckpt_path, map_location=torch.device("cpu")
+                )
+                self.reference_architecture.load_state_dict(
+                    submodule_state_dict(reference_ckpt["state_dict"], "architecture")
+                )
+
         if ckpt_path is not None:
-            ckpt = torch.load(ckpt_path)
-            self.load_state_dict(ckpt["state_dict"])
+            print(f"Loading from checkpoint path {ckpt_path}")
+            ckpt = torch.load(ckpt_path, map_location=torch.device("cpu"))
+            self.architecture.load_state_dict(
+                submodule_state_dict(ckpt["state_dict"], "architecture")
+            )
 
         if freeze_features:
             print("Freezing feature extractor")
@@ -57,9 +88,10 @@ class ImbalancedClassifierModel(LightningModule):
             set_grad(self.architecture, requires_grad=True)
         set_grad(self.architecture.linear_output, requires_grad=True)
 
-        self.only_update_misclassified = only_update_misclassified
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
+        self.only_update_misclassified = only_update_misclassified
+
         self.train_accuracy = Accuracy()
         self.val_accuracy = Accuracy()
 
@@ -73,9 +105,7 @@ class ImbalancedClassifierModel(LightningModule):
     def configure_optimizers(
         self,
     ) -> Union[Optimizer, Tuple[Sequence[Optimizer], Sequence[Any]]]:
-        optim = hydra.utils.instantiate(
-            self.hparams.optimizer, params=self.parameters()
-        )
+        optim = hydra.utils.instantiate(self.optimizer_config, params=self.parameters())
         return optim
 
     def forward(self, x) -> torch.Tensor:
@@ -103,21 +133,45 @@ class ImbalancedClassifierModel(LightningModule):
         # TODO: do we need to change the normalization?
         if self.only_update_misclassified:
             # This will rescale to reflect the changed effective batch size
-            # w = w * (preds != y)
-            # reweighted_loss = (loss * w).sum(0) / w.sum(0)
+            correct = preds != y
+            w = w * correct.float()
+            reweighted_loss = (loss * w).sum(0) / (w.sum(0) + 1e-5)
 
             # This will not rescale
-            reweighted_loss = (loss * w * (preds != y)).sum(0) / w.sum(0)
+            # reweighted_loss = (loss * w * (preds != y).float()).sum(0) / w.sum(0)
         else:
             reweighted_loss = (loss * w).sum(0) / w.sum(0)
-        return reweighted_loss, logits, preds, y, other_data
+
+        if self.regularization_type == "logits":
+            reference_logits = self.reference_architecture(x)
+            kl = (
+                -(reference_logits.softmax(dim=-1) * logits.log_softmax(dim=-1))
+                .sum(-1)
+                .mean(0)
+            )
+            reg_term = self.reference_regularization * kl
+        elif self.regularization_type == "weights":
+            learned_params, ref_params = match_flattened_params(
+                self.architecture, self.reference_architecture
+            )
+            l2 = (learned_params - ref_params).pow(2).sum(0)
+            reg_term = self.reference_regularization * l2
+        elif self.regularization_type is None:
+            reg_term = 0
+        total_loss = reweighted_loss + reg_term
+        return (total_loss, reweighted_loss, reg_term), logits, preds, y, other_data
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
-        loss, logits, preds, targets, other_data = self.step(batch)
+        losses, logits, preds, targets, other_data = self.step(batch)
+        loss, ce_term, reg_term = losses
 
         # log train metrics
         acc = self.train_accuracy(preds, targets)
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
+        self.log("train/ce_term", ce_term, on_step=False, on_epoch=True, prog_bar=False)
+        self.log(
+            "train/reg_term", reg_term, on_step=False, on_epoch=True, prog_bar=False
+        )
         self.log("train/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
 
         # we can return here dict with any tensors
@@ -145,13 +199,17 @@ class ImbalancedClassifierModel(LightningModule):
         self.log("train/loss_best", min(self.metric_hist["train/loss"]), prog_bar=False)
 
     def validation_step(self, batch: Any, batch_idx: int):
-        loss, logits, preds, targets, other_data = self.step(batch)
+        losses, logits, preds, targets, other_data = self.step(batch)
+        loss, ce_term, reg_term = losses
+
         num_examples = len(targets)
         num_pos_pred = (preds == 1).sum().item()
 
         # log val metrics
         acc = self.val_accuracy(preds, targets)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
+        self.log("val/ce_term", ce_term, on_step=False, on_epoch=True, prog_bar=False)
+        self.log("val/reg_term", reg_term, on_step=False, on_epoch=True, prog_bar=False)
         self.log("val/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
 
         return {
@@ -181,3 +239,28 @@ class ImbalancedClassifierModel(LightningModule):
 def set_grad(module: torch.nn.Module, requires_grad):
     for param in module.parameters():
         param.requires_grad = requires_grad
+
+
+def match_flattened_params(module1, module2):
+    params1 = dict(module1.named_parameters())
+    params2 = dict(module2.named_parameters())
+    assert set(params1.keys()) == set(params2.keys())
+    p_list1 = []
+    p_list2 = []
+    for n in params1:
+        p1 = params1[n].flatten()
+        p2 = params2[n].flatten()
+        p_list1.append(p1)
+        p_list2.append(p2)
+    return torch.cat(p_list1), torch.cat(p_list2)
+
+
+def submodule_state_dict(state_dict: Dict[str, torch.Tensor], submodule_name: str):
+    assert len(submodule_name) > 0
+    # keep only attributes of submodule and remove prefix
+    submodule_state_dict = {
+        k.lstrip(f"{submodule_name}."): v
+        for k, v in state_dict.items()
+        if k.startswith(f"{submodule_name}.")
+    }
+    return submodule_state_dict

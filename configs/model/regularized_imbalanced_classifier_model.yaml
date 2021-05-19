@@ -1,7 +1,0 @@
-_target_: src.pl_models.regularized_imbalanced_classifier_model.RegularizedImbalancedClassifierModel
-freeze_features: False
-ckpt_path: null
-reference_regularization: 1.0
-regularization_type: "logits"
-reinit: False
-only_update_misclassified: False

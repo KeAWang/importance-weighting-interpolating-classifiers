@@ -1,4 +1,7 @@
 _target_: src.pl_models.imbalanced_classifier_model.ImbalancedClassifierModel
 freeze_features: False
 ckpt_path: null
+reference_regularization: 1.0
+regularization_type: null
+reference_ckpt_path: null
 only_update_misclassified: False
