@@ -61,6 +61,7 @@ def hydra_init(config: DictConfig, train=True) -> HydraObjects:
         architecture=architecture,
         class_weights=class_weights,
         optimizer_config=config.optimizer,
+        lr_scheduler_config=config.get("lr_scheduler"),
         loss_fn=config.loss_fn,
         output_size=output_size,
         _recursive_=False,

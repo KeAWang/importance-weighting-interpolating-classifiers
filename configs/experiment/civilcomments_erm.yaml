@@ -1,11 +1,13 @@
 # @package _global_
+# settings from https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py#L85
 
 defaults:
     - /datamodule: civilcomments_datamodule.yaml
     - /model: imbalanced_classifier_model.yaml
-    - /optimizer: sgd.yaml # TODO: change to Adam etc. and add lr scheduler
+    - /optimizer: adamw.yaml
     - /architecture: distilbert_net.yaml                 
     - /loss_fn: cross_entropy.yaml
+    - /lr_scheduler: linear.yaml
 
 logger:
     wandb:
@@ -19,19 +21,18 @@ callbacks:
 
 trainer:
     min_epochs: 1
-    max_epochs: 50
+    max_epochs: 5
+    gradient_clip_val: 1.0
 
 datamodule:
     tokenizer:
         pretrained_model_name_or_path: ${architecture.model_name}
 
-    batch_size: 64
+    batch_size: 16
     num_workers: 4
     pin_memory: True
     flatten_input: False
 
 optimizer:
-    # TODO: update
-    lr: 0.001
-    momentum: 0.9
-    weight_decay: 0.0001
+    lr: 0.00001
+    weight_decay: 0.01

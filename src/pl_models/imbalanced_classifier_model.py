@@ -1,5 +1,6 @@
 from typing import Any, Dict, List, Sequence, Tuple, Union, Optional
 from copy import deepcopy
+from math import ceil
 
 import hydra
 import torch
@@ -15,6 +16,7 @@ class ImbalancedClassifierModel(LightningModule):
         self,
         architecture: torch.nn.Module,
         optimizer_config: DictConfig,
+        lr_scheduler_config: Optional[DictConfig],
         loss_fn: DictConfig,
         freeze_features: bool,
         ckpt_path: Optional[str],
@@ -39,6 +41,7 @@ class ImbalancedClassifierModel(LightningModule):
         # architecture since it adds extra memory costs and requires the class
         # definition for the architecture when loading the checkpoint with torch.load
 
+        self.lr_scheduler_config = lr_scheduler_config
         self.optimizer_config = optimizer_config
 
         self.architecture = architecture
@@ -105,8 +108,29 @@ class ImbalancedClassifierModel(LightningModule):
     def configure_optimizers(
         self,
     ) -> Union[Optimizer, Tuple[Sequence[Optimizer], Sequence[Any]]]:
-        optim = hydra.utils.instantiate(self.optimizer_config, params=self.parameters())
-        return optim
+        optimizer = hydra.utils.instantiate(
+            self.optimizer_config, params=self.parameters()
+        )
+        if self.lr_scheduler_config is not None:
+            interval = self.lr_scheduler_config["interval"]
+            del self.lr_scheduler_config["interval"]
+            if self.lr_scheduler_config.get("num_training_steps") is None:
+                num_train = len(self.trainer.datamodule.train_dataset)
+                steps_per_epoch = ceil(num_train / self.trainer.datamodule.batch_size)
+                num_epochs = self.trainer.max_epochs
+                self.lr_scheduler_config["num_training_steps"] = (
+                    num_epochs * steps_per_epoch
+                )
+
+            lr_scheduler = hydra.utils.instantiate(
+                self.lr_scheduler_config, optimizer=optimizer,
+            )
+            return {
+                "optimizer": optimizer,
+                "lr_scheduler": {"scheduler": lr_scheduler, "interval": interval},
+            }
+
+        return optimizer
 
     def forward(self, x) -> torch.Tensor:
         return self.architecture(x)
