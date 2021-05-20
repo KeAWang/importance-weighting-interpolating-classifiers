@@ -5,14 +5,18 @@ from wilds.common.grouper import CombinatorialGrouper
 
 from typing import List, Optional
 from math import prod
-from .base_datamodule import GroupDataModule
+from .base_datamodule import (
+    GroupDataModule,
+    IMAGENET_DEFAULT_MEAN,
+    IMAGENET_DEFAULT_STD,
+)
 from torchvision.transforms import transforms
 from ..datasets.wilds_dataset import WILDSDataset
 from ..datasets.utils import ReweightedDataset
-from .utils import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from transformers.tokenization_utils import PreTrainedTokenizer
 
 
+# Default dataset settings: https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py
 class WILDSDataModule(GroupDataModule):
     def __init__(
         self,

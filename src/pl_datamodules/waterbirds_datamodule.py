@@ -4,11 +4,14 @@ import tarfile
 
 from typing import Tuple
 from math import prod
-from .base_datamodule import GroupDataModule
+from .base_datamodule import (
+    GroupDataModule,
+    IMAGENET_DEFAULT_MEAN,
+    IMAGENET_DEFAULT_STD,
+)
 from torchvision.transforms import transforms
 from ..datasets.waterbirds_dataset import WaterbirdsDataset
 from ..datasets.utils import ReweightedDataset
-from .utils import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 
 class WaterbirdsDataModule(GroupDataModule):

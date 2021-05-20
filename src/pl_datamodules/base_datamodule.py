@@ -95,3 +95,7 @@ class GroupDataModule(BaseDataModule):
         y_counter = Counter(dataset.y_array.tolist())
         g_counter = Counter(dataset.group_array.tolist())
         return y_counter, g_counter
+
+
+IMAGENET_DEFAULT_MEAN = [0.485, 0.456, 0.406]
+IMAGENET_DEFAULT_STD = [0.229, 0.224, 0.225]

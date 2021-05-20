@@ -4,8 +4,7 @@ import tarfile
 
 from typing import Tuple, List
 from math import prod
-from .base_datamodule import BaseDataModule
-from .utils import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+from .base_datamodule import BaseDataModule, IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from torchvision.transforms import transforms
 from ..datasets.celeba_dataset import CelebADataset
 from ..datasets.utils import ReweightedDataset
