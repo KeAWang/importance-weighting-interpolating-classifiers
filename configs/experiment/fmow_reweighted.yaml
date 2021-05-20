@@ -1,4 +1,5 @@
 # @package _global_
+# #TODO THIS IS NOT READY FOR TRAINING YET
 
 defaults:
     - /datamodule: fmow_datamodule.yaml

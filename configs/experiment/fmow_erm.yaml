@@ -1,11 +1,16 @@
 # @package _global_
 
+# #TODO THIS IS NOT READY FOR TRAINING YET
+# based on https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py#L108
+# TODO: implement n_groups_per_batch? https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py#L130
+
 defaults:
     - /datamodule: fmow_datamodule.yaml
     - /model: imbalanced_classifier_model.yaml
-    - /optimizer: sgd.yaml                    
-    - /architecture: res_net.yaml                 
+    - /optimizer: adam.yaml
+    - /architecture: res_net.yaml
     - /loss_fn: cross_entropy.yaml
+    - /lr_scheduler: step
 
 logger:
     wandb:
@@ -28,10 +33,12 @@ datamodule:
     flatten_input: False
 
 optimizer:
-    lr: 0.001
-    momentum: 0.9
-    weight_decay: 0.0001
+    lr: 0.0001
+    weight_decay: 0.
+
+lr_scheduler:
+    gamma: 0.96
 
 architecture:
     arch: resnet50
-
+    # TODO: use densenet121
