@@ -157,9 +157,12 @@ class GroupValReweightedAccuracyMonitor(Callback):
         total_train = sum(self.train_group_counts.values())
         if total_train > 0:  # validation sanity checks won't have any training samples
             reweighted_acc = 0
-            for g, c in self.train_group_counts.items():
+            total_in_train_from_val_groups = 0  # sometimes we don't see every train group in validation set, e.g.  when we train for less than one epoch
+            for g in group_accs:
+                c = self.train_group_counts[g]
                 reweighted_acc += group_accs[g] * c
-            reweighted_acc /= total_train
+                total_in_train_from_val_groups += c
+            reweighted_acc /= total_in_train_from_val_groups
 
             print(f"Group counts in training set: {self.train_group_counts}")
             pl_module.log(
