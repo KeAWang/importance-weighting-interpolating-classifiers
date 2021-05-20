@@ -1,25 +1,27 @@
 import torch
 import wilds
+from omegaconf import DictConfig
 from wilds.common.grouper import CombinatorialGrouper
 
-from omegaconf import DictConfig
-from typing import List
+from typing import List, Optional
 from math import prod
 from .base_datamodule import GroupDataModule
 from torchvision.transforms import transforms
 from ..datasets.wilds_dataset import WILDSDataset
 from ..datasets.utils import ReweightedDataset
+from transformers.tokenization_utils import PreTrainedTokenizer
 
 
 class WILDSDataModule(GroupDataModule):
     def __init__(
         self,
         dataset_name,
-        resolution: List[int],
         train_transform: DictConfig,
         eval_transform: DictConfig,
         num_classes: int,
         groupby_fields: List[str],
+        tokenizer: Optional[PreTrainedTokenizer] = None,
+        resolution: Optional[List[int]] = None,
         split_scheme="official",
         download=True,
         **kwargs,
@@ -30,9 +32,14 @@ class WILDSDataModule(GroupDataModule):
         self.split_scheme = split_scheme
         self.train_transform = train_transform
         self.eval_transform = eval_transform
-        self.dims = (3,) + tuple(resolution)
+        if resolution is not None:
+            self.dims = (3,) + tuple(resolution)
+        else:
+            # TODO
+            self.dims = None
         self.num_classes = num_classes
         self.groupby_fields = groupby_fields
+        self.tokenizer = tokenizer
 
         if self.flatten_input:
             self.dims = (prod(self.dims),)
@@ -59,10 +66,10 @@ class WILDSDataModule(GroupDataModule):
             split_scheme=self.split_scheme,
         )
         train_transforms_list = initialize_transform(
-            dataset=full_dataset, **self.train_transform
+            dataset=full_dataset, tokenizer=self.tokenizer, **self.train_transform
         )
         eval_transforms_list = initialize_transform(
-            dataset=full_dataset, **self.eval_transform
+            dataset=full_dataset, tokenizer=self.tokenizer, **self.eval_transform
         )
 
         if self.flatten_input:
@@ -108,11 +115,16 @@ class WILDSDataModule(GroupDataModule):
         self.test_dataset = test_dataset
 
 
-def initialize_transform(transform_name, config, dataset):
+def initialize_transform(
+    transform_name: Optional[str],
+    config: DictConfig,
+    dataset: wilds.datasets.wilds_dataset.WILDSDataset,
+    tokenizer,
+):
     if transform_name is None:
         return []
     elif transform_name == "bert":
-        return initialize_bert_transform(config)
+        return initialize_text_transform(config, tokenizer)
     elif transform_name == "image_base":
         return initialize_image_base_transform(config, dataset)
     elif transform_name == "image_resize_and_center_crop":
@@ -123,14 +135,10 @@ def initialize_transform(transform_name, config, dataset):
         raise ValueError(f"{transform_name} not recognized")
 
 
-def initialize_bert_transform(config):
-    # TODO: update this when we use BERT
-    assert "bert" in config.model
+def initialize_text_transform(config: DictConfig, tokenizer):
     assert config.max_token_length is not None
 
-    tokenizer = getBertTokenizer(config.model)
-
-    def transform(text):
+    def transform_text(text):
         tokens = tokenizer(
             text,
             padding="max_length",
@@ -138,7 +146,7 @@ def initialize_bert_transform(config):
             max_length=config.max_token_length,
             return_tensors="pt",
         )
-        if config.model == "bert-base-uncased":
+        if tokenizer.name_or_path == "bert-base-uncased":
             x = torch.stack(
                 (
                     tokens["input_ids"],
@@ -147,28 +155,18 @@ def initialize_bert_transform(config):
                 ),
                 dim=2,
             )
-        elif config.model == "distilbert-base-uncased":
+        elif tokenizer.name_or_path == "distilbert-base-uncased":
             x = torch.stack((tokens["input_ids"], tokens["attention_mask"]), dim=2)
         x = torch.squeeze(x, dim=0)  # First shape dim is always 1
         return x
 
-    return transform
+    transform = transforms.Lambda(lambda x: transform_text(x))
+    return [transform]
 
 
-def getBertTokenizer(model):
-    from transformers import BertTokenizerFast, DistilBertTokenizerFast
-
-    if model == "bert-base-uncased":
-        tokenizer = BertTokenizerFast.from_pretrained(model)
-    elif model == "distilbert-base-uncased":
-        tokenizer = DistilBertTokenizerFast.from_pretrained(model)
-    else:
-        raise ValueError(f"Model: {model} not recognized.")
-
-    return tokenizer
-
-
-def initialize_image_base_transform(config, dataset):
+def initialize_image_base_transform(
+    config: DictConfig, dataset: wilds.datasets.wilds_dataset.WILDSDataset
+):
     transform_steps = []
     if dataset.original_resolution is not None and min(
         dataset.original_resolution
@@ -184,7 +182,9 @@ def initialize_image_base_transform(config, dataset):
     return transform_steps
 
 
-def initialize_image_resize_and_center_crop_transform(config, dataset):
+def initialize_image_resize_and_center_crop_transform(
+    config: DictConfig, dataset: wilds.datasets.wilds_dataset.WILDSDataset
+):
     """
     Resizes the image to a slightly larger square then crops the center.
     """
@@ -197,13 +197,13 @@ def initialize_image_resize_and_center_crop_transform(config, dataset):
         target_resolution = config.target_resolution
     else:
         target_resolution = dataset.original_resolution
-    transforms = [
+    transforms_list = [
         transforms.Resize(scaled_resolution),
         transforms.CenterCrop(target_resolution),
         transforms.ToTensor(),
         transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
     ]
-    return transforms
+    return transforms_list
 
 
 def initialize_poverty_train_transform():

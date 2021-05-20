@@ -21,6 +21,8 @@ wandb>=0.10.20
 rich
 python-dotenv
 pre-commit
+wilds
+transformers
 #scikit-learn
 #pandas
 #matplotlib

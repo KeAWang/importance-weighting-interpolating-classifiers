@@ -1,0 +1,28 @@
+defaults:
+    - tokenizer: auto_tokenizer.yaml
+
+# Taken from https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py
+_target_: src.pl_datamodules.utils.make_datamodule
+group_datamodule_cls_name: WILDSDataModule
+wrapper_type: null
+
+# WILDSDatamodule settings
+dataset_name: civilcomments
+
+train_transform:
+    transform_name: bert
+    config:
+        max_token_length: 300
+eval_transform: 
+    transform_name: bert
+    config:
+        max_token_length: 300
+groupby_fields: ['black', 'y']
+
+
+flatten_input: False
+data_dir: ${data_dir}  # data_dir is specified in config.yaml
+batch_size: null
+num_workers: 0
+pin_memory: True
+num_classes: 2

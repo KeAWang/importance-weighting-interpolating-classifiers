@@ -1,0 +1,7 @@
+# See https://huggingface.co/distilbert-base-uncased/resolve/main/config.json for
+# default huggingface configs
+_target_: src.architectures.transformers.DistilBertNet
+model_name: distilbert-base-uncased
+output_size: null
+hf_config:
+    cache_dir: ${oc.env:HUGGINGFACE_MODEL_CACHE_DIR}  # data_dir is specified in config.yaml
