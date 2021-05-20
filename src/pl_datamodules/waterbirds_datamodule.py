@@ -8,6 +8,7 @@ from .base_datamodule import GroupDataModule
 from torchvision.transforms import transforms
 from ..datasets.waterbirds_dataset import WaterbirdsDataset
 from ..datasets.utils import ReweightedDataset
+from .utils import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 
 
 class WaterbirdsDataModule(GroupDataModule):
@@ -100,7 +101,7 @@ def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: 
             ),
             transforms.CenterCrop(resolution),
             transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD),
         ]
     else:
         transforms_list = [
@@ -112,6 +113,6 @@ def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: 
             ),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD),
         ]
     return transforms_list

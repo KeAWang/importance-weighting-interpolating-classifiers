@@ -5,6 +5,7 @@ import tarfile
 from typing import Tuple, List
 from math import prod
 from .base_datamodule import BaseDataModule
+from .utils import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from torchvision.transforms import transforms
 from ..datasets.celeba_dataset import CelebADataset
 from ..datasets.utils import ReweightedDataset
@@ -111,7 +112,7 @@ def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: 
             transforms.CenterCrop(orig_min_dim),
             transforms.Resize(resolution),
             transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD),
         ]
     else:
         # Orig aspect ratio is 0.81, so we don't squish it in that direction any more
@@ -124,6 +125,6 @@ def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: 
             ),
             transforms.RandomHorizontalFlip(),
             transforms.ToTensor(),
-            transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+            transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD),
         ]
     return transforms_list

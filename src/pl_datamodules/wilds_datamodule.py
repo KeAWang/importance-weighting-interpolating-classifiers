@@ -9,6 +9,7 @@ from .base_datamodule import GroupDataModule
 from torchvision.transforms import transforms
 from ..datasets.wilds_dataset import WILDSDataset
 from ..datasets.utils import ReweightedDataset
+from .utils import IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
 from transformers.tokenization_utils import PreTrainedTokenizer
 
 
@@ -177,7 +178,7 @@ def initialize_image_base_transform(
         transform_steps.append(transforms.Resize(config.target_resolution))
     transform_steps += [
         transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD),
     ]
     return transform_steps
 
@@ -201,7 +202,7 @@ def initialize_image_resize_and_center_crop_transform(
         transforms.Resize(scaled_resolution),
         transforms.CenterCrop(target_resolution),
         transforms.ToTensor(),
-        transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225]),
+        transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD),
     ]
     return transforms_list
 
