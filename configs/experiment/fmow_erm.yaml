@@ -1,0 +1,37 @@
+# @package _global_
+
+defaults:
+    - /datamodule: fmow_datamodule.yaml
+    - /model: imbalanced_classifier_model.yaml
+    - /optimizer: sgd.yaml                    
+    - /architecture: res_net.yaml                 
+    - /loss_fn: cross_entropy.yaml
+
+logger:
+    wandb:
+        tags: ["fmow", "erm"]
+
+callbacks:
+    group_train_accuracy_monitor:
+        _target_: src.pl_callbacks.metrics_callbacks.GroupTrainAccuracyMonitor
+    group_val_accuracy_monitor:
+        _target_: src.pl_callbacks.metrics_callbacks.GroupValReweightedAccuracyMonitor
+
+trainer:
+    min_epochs: 1
+    max_epochs: 50
+
+datamodule:
+    batch_size: 64
+    num_workers: 4
+    pin_memory: True
+    flatten_input: False
+
+optimizer:
+    lr: 0.001
+    momentum: 0.9
+    weight_decay: 0.0001
+
+architecture:
+    arch: resnet50
+

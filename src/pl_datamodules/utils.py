@@ -5,6 +5,7 @@ from .imbalanced_cifar_datamodule import (
     ImbalancedCIFAR10DataModule,
     ImbalancedCIFAR100DataModule,
 )
+from .wilds_datamodule import WILDSDataModule
 
 from .base_datamodule import GroupDataModule
 from torch.utils.data import DataLoader, Subset

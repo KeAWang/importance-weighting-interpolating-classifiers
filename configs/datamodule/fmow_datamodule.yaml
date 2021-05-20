@@ -1,0 +1,27 @@
+# Taken from https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py
+_target_: src.pl_datamodules.utils.make_datamodule
+group_datamodule_cls_name: WILDSDataModule
+wrapper_type: null
+
+# WILDSDatamodule settings
+dataset_name: fmow
+resolution: [224, 224] # See https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/wilds/datasets/fmow_dataset.py#L79
+train_transform:
+    transform_name: image_base
+    config:
+        target_resolution: null
+        dataset: fmow
+eval_transform: 
+    transform_name: image_base
+    config:
+        target_resolution: null
+        dataset: fmow
+groupby_fields: ["year"]
+
+
+flatten_input: False
+data_dir: ${data_dir}  # data_dir is specified in config.yaml
+batch_size: null
+num_workers: 0
+pin_memory: True
+num_classes: 62
