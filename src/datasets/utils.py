@@ -16,6 +16,12 @@ GroupedLabeledDatapoint = namedtuple(
     "GroupedLabeledDatapoint", ("x", "y", "w", "g"), defaults=(None, None, 1, None)
 )
 
+ExtraLabeledDatapoint = namedtuple(
+    "ExtraLabeledDatapoint",
+    ("x", "y", "w", "g", "extra"),
+    defaults=(None, None, 1, None, False),
+)
+
 
 class UndersampledByGroupDataset(Dataset):
     """ Wraps a map Dataset into an dataset undersampled by group.
@@ -355,19 +361,15 @@ class UndersampledWithExtrasDataset(UndersampledDataset):
         self.undersampled_indices = self.indices
         del self.indices
         all_indices = torch.arange(len(self.dataset))
-        extra = torch.zeros(len(all_indices), dtype=torch.bool)
-        extra[self.undersampled_indices] = True
+        extra = torch.ones(len(all_indices), dtype=torch.bool)
+        extra[self.undersampled_indices] = False
         self.extra = extra
 
     def __getitem__(self, idx):
         item = self.dataset[idx]
         extra = self.extra[idx]
         wrapped_item = item + (extra,)
-        if isinstance(item, tuple) and hasattr(item, "_fields"):  # check if namedtuple
-            ExtraLabeledDatapoint = namedtuple(
-                "ExtraLabeledDatapoint", item._fields + ("extra",)
-            )
-            wrapped_item = ExtraLabeledDatapoint(*wrapped_item)
+        wrapped_item = ExtraLabeledDatapoint(*wrapped_item)
         return wrapped_item
 
     def __len__(self):

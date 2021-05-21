@@ -188,6 +188,9 @@ class ImbalancedClassifierModel(LightningModule):
         total_loss = reweighted_loss + reg_term
         return (total_loss, reweighted_loss, reg_term), logits, preds, y, other_data
 
+    # def on_train_batch_start(self, batch, batch_idx, dataloader_idx):
+    #    breakpoint()
+
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
         losses, logits, preds, targets, other_data = self.step(batch, training=True)
         loss, ce_term, reg_term = losses

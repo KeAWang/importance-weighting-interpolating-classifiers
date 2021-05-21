@@ -93,7 +93,6 @@ def make_datamodule(
         class UndersampledWithExtrasDataModule(group_datamodule_cls):
             def setup(self, *args, **kwargs):
                 super().setup(*args, **kwargs)
-                # Undersample train dataset
                 train_dataset = self.train_dataset
                 _, _, train_weights = self.compute_weights(train_dataset)
                 new_train_dataset = UndersampledWithExtrasDataset(
