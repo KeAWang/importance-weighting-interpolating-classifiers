@@ -6,6 +6,7 @@ import numpy as np
 from typing import Sequence, Optional, Dict, Union
 
 
+# UGH: Pytorch dataloaders don't support dataclasses, only namedtuples
 LabeledDatapoint = namedtuple(
     "LabeledDatapoint", ("x", "y", "w"), defaults=(None, None, 1)
 )
@@ -335,3 +336,39 @@ def undersampling_schedule(
         weights_t = weights[idx] / g(weights[keep_idx], t, T)
 
         yield idx, weights_t
+
+
+class UndersampledWithExtrasDataset(UndersampledDataset):
+    def __init__(
+        self,
+        dataset: Dataset,
+        weights: Sequence[float],
+        weights_upper_bound: Optional[float] = None,
+        generator: Optional[Generator] = None,
+    ):
+        super().__init__(
+            dataset=dataset,
+            weights=weights,
+            weights_upper_bound=weights_upper_bound,
+            generator=generator,
+        )
+        self.undersampled_indices = self.indices
+        del self.indices
+        all_indices = torch.arange(len(self.dataset))
+        extra = torch.zeros(len(all_indices), dtype=torch.bool)
+        extra[self.undersampled_indices] = True
+        self.extra = extra
+
+    def __getitem__(self, idx):
+        item = self.dataset[idx]
+        extra = self.extra[idx]
+        wrapped_item = item + (extra,)
+        if isinstance(item, tuple) and hasattr(item, "_fields"):  # check if namedtuple
+            ExtraLabeledDatapoint = namedtuple(
+                "ExtraLabeledDatapoint", item._fields + ("extra",)
+            )
+            wrapped_item = ExtraLabeledDatapoint(*wrapped_item)
+        return wrapped_item
+
+    def __len__(self):
+        return len(self.dataset)

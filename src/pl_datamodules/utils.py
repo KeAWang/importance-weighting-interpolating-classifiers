@@ -14,6 +14,7 @@ from ..datasets.utils import (
     UndersampledDataset,
     ReweightedDataset,
     undersampling_schedule,
+    UndersampledWithExtrasDataset,
 )
 from typing import Optional
 import sys
@@ -86,6 +87,23 @@ def make_datamodule(
                 # Keep val and test dataset the same as before
 
         return UndersampledDataModule(**module_kwargs)
+
+    elif wrapper_type == "undersampled_with_extras":
+
+        class UndersampledWithExtrasDataModule(group_datamodule_cls):
+            def setup(self, *args, **kwargs):
+                super().setup(*args, **kwargs)
+                # Undersample train dataset
+                train_dataset = self.train_dataset
+                _, _, train_weights = self.compute_weights(train_dataset)
+                new_train_dataset = UndersampledWithExtrasDataset(
+                    train_dataset, weights=train_weights
+                )
+                self.train_dataset = new_train_dataset
+
+                # Keep val and test dataset the same as before
+
+        return UndersampledWithExtrasDataModule(**module_kwargs)
 
     elif wrapper_type == "annealed":
 

@@ -23,6 +23,7 @@ data_dir: ${oc.env:DATA_DIR}
 
 # wandb run to load checkpoint from. Must be [user, project, run_name, ckpt_name]
 load_wandb_run: null
+load_reference_wandb_run: null
 
 # use `python run.py debug=true` for easy debugging!
 # this will run 1 train, val and test loop with only 1 batch

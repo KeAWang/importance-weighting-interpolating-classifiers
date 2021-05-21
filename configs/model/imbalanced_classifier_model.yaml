@@ -4,4 +4,4 @@ ckpt_path: null
 reference_regularization: 1.0
 regularization_type: null
 reference_ckpt_path: null
-only_update_misclassified: False
+dont_update_correct_extras: False

@@ -23,7 +23,7 @@ class ImbalancedClassifierModel(LightningModule):
         reference_ckpt_path: Optional[str],
         output_size: int,
         reference_regularization: float,
-        only_update_misclassified: bool,
+        dont_update_correct_extras: bool,
         regularization_type: Optional[str],
         **unused_kwargs,
     ):
@@ -91,9 +91,10 @@ class ImbalancedClassifierModel(LightningModule):
             set_grad(self.architecture, requires_grad=True)
         set_grad(self.architecture.linear_output, requires_grad=True)
 
+        self.dont_update_correct_extras = dont_update_correct_extras
+
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
-        self.only_update_misclassified = only_update_misclassified
 
         self.train_accuracy = Accuracy()
         self.val_accuracy = Accuracy()
@@ -136,7 +137,7 @@ class ImbalancedClassifierModel(LightningModule):
         return self.architecture(x)
 
     def step(
-        self, batch: Tuple
+        self, batch: Tuple, training: bool = True
     ) -> Tuple[
         torch.Tensor, torch.Tensor, torch.Tensor, torch.Tensor, List[torch.Tensor]
     ]:
@@ -155,10 +156,12 @@ class ImbalancedClassifierModel(LightningModule):
         preds = torch.argmax(logits, dim=-1)
         loss = self.loss_fn(logits, y)
         # TODO: do we need to change the normalization?
-        if self.only_update_misclassified:
+        if training and self.dont_update_correct_extras:
+            extra = batch.extra
             # This will rescale to reflect the changed effective batch size
-            correct = preds != y
-            w = w * correct.float()
+            correct = preds == y
+            # zero out the weights for extra samples that we got correct already
+            w = w * (~(extra & correct)).float()
             reweighted_loss = (loss * w).sum(0) / (w.sum(0) + 1e-5)
 
             # This will not rescale
@@ -186,7 +189,7 @@ class ImbalancedClassifierModel(LightningModule):
         return (total_loss, reweighted_loss, reg_term), logits, preds, y, other_data
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
-        losses, logits, preds, targets, other_data = self.step(batch)
+        losses, logits, preds, targets, other_data = self.step(batch, training=True)
         loss, ce_term, reg_term = losses
 
         # log train metrics
@@ -223,7 +226,7 @@ class ImbalancedClassifierModel(LightningModule):
         self.log("train/loss_best", min(self.metric_hist["train/loss"]), prog_bar=False)
 
     def validation_step(self, batch: Any, batch_idx: int):
-        losses, logits, preds, targets, other_data = self.step(batch)
+        losses, logits, preds, targets, other_data = self.step(batch, training=False)
         loss, ce_term, reg_term = losses
 
         num_examples = len(targets)
@@ -282,8 +285,11 @@ def match_flattened_params(module1, module2):
 def submodule_state_dict(state_dict: Dict[str, torch.Tensor], submodule_name: str):
     assert len(submodule_name) > 0
     # keep only attributes of submodule and remove prefix
+    def remove_prefix(s, p):
+        return s[len(p) :]
+
     submodule_state_dict = {
-        k.lstrip(f"{submodule_name}."): v
+        remove_prefix(k, f"{submodule_name}."): v
         for k, v in state_dict.items()
         if k.startswith(f"{submodule_name}.")
     }
