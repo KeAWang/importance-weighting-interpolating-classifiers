@@ -1,3 +1,4 @@
 _target_: torch.optim.lr_scheduler.StepLR
 gamma: 0.1
+step_size: null
 interval: epoch

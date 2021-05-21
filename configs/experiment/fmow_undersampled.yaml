@@ -13,7 +13,7 @@ defaults:
 
 logger:
     wandb:
-        tags: ["fmow", "erm"]
+        tags: ["fmow", "undersampled"]
 
 callbacks:
     group_train_accuracy_monitor:
@@ -26,7 +26,8 @@ trainer:
     max_epochs: 50
 
 datamodule:
-    wrapper_type: reweighted
+    wrapper_type: undersampled
+
     groupby_fields: ["year"]
 
     batch_size: 64
@@ -44,4 +45,3 @@ lr_scheduler:
 
 architecture:
     arch: densenet121
-

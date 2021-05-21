@@ -114,7 +114,7 @@ class ImbalancedClassifierModel(LightningModule):
         if self.lr_scheduler_config is not None:
             interval = self.lr_scheduler_config["interval"]
             del self.lr_scheduler_config["interval"]
-            if self.lr_scheduler_config.get("num_training_steps") is None:
+            if self.lr_scheduler_config.get("num_training_steps") == "DYNAMIC":
                 num_train = len(self.trainer.datamodule.train_dataset)
                 steps_per_epoch = ceil(num_train / self.trainer.datamodule.batch_size)
                 num_epochs = self.trainer.max_epochs

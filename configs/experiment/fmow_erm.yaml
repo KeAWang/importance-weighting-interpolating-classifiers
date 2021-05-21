@@ -1,14 +1,14 @@
 # @package _global_
 
-# #TODO THIS IS NOT READY FOR TRAINING YET
 # based on https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py#L108
+# and https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/scheduler.py#L10
 # TODO: implement n_groups_per_batch? https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py#L130
 
 defaults:
     - /datamodule: fmow_datamodule.yaml
     - /model: imbalanced_classifier_model.yaml
     - /optimizer: adam.yaml
-    - /architecture: res_net.yaml
+    - /architecture: dense_net.yaml
     - /loss_fn: cross_entropy.yaml
     - /lr_scheduler: step
 
@@ -27,6 +27,8 @@ trainer:
     max_epochs: 50
 
 datamodule:
+    groupby_fields: ["year"]
+
     batch_size: 64
     num_workers: 4
     pin_memory: True
@@ -38,7 +40,7 @@ optimizer:
 
 lr_scheduler:
     gamma: 0.96
+    step_size: 1
 
 architecture:
-    arch: resnet50
-    # TODO: use densenet121
+    arch: densenet121
