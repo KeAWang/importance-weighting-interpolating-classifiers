@@ -112,6 +112,8 @@ def make_datamodule(
                 annealing_fn: str,
                 num_epochs: int,
                 annealing_params: list,
+                t: Optional[int] = None,
+                reweigh: bool = True,
                 *args,
                 **kwargs,
             ):
@@ -121,6 +123,8 @@ def make_datamodule(
                 self.annealing_fn = annealing_fn
                 self.annealing_params = tuple(annealing_params)
                 self.num_epochs = num_epochs
+                self.t = t
+                self.reweigh = reweigh
 
             def setup(self, stage=None):
                 super().setup(stage=stage)
@@ -128,8 +132,8 @@ def make_datamodule(
                 train_dataset = self.train_dataset
                 _, _, train_weights = self.compute_weights(train_dataset)
 
-                self.annealed_train_datasets = list(
-                    ReweightedDataset(Subset(train_dataset, idxs), ws)
+                datasets_ws = list(
+                    (Subset(train_dataset, idxs), ws)
                     for idxs, ws in undersampling_schedule(
                         train_weights,
                         self.num_epochs,
@@ -137,9 +141,18 @@ def make_datamodule(
                         self.annealing_params,
                     )
                 )
+                if self.reweigh:
+                    self.annealed_train_datasets = [
+                        ReweightedDataset(dataset, w) for dataset, w in datasets_ws
+                    ]
+                else:
+                    self.annealed_train_datasets = [
+                        dataset for dataset, _ in datasets_ws
+                    ]
 
             def train_dataloader(self):
-                dataset = self.annealed_train_datasets[self.current_epoch]
+                t = self.self.current_epoch if self.t is None else self.t
+                dataset = self.annealed_train_datasets[t]
                 # NOTE: Must use with Trainer.reload_dataloaders_every_epoch = True
                 self.current_epoch += 1
                 return DataLoader(

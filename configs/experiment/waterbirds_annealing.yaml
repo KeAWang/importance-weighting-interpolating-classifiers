@@ -30,6 +30,8 @@ datamodule:
     num_epochs: ${trainer.max_epochs}
     annealing_fn: linear
     annealing_params: []
+    t: null
+    reweigh: True
 
     resolution: [224, 224]
     batch_size: 64
