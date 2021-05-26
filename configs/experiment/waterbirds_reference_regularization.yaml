@@ -14,7 +14,7 @@ logger:
     wandb:
         tags: ["binary", "waterbirds", "reference-regularization"]
 
-load_wandb_run: null
+load_wandb_run: ["kealexanderwang", "importance-reweighing", "waterbirds-undersampled-493", "last.ckpt"]
 load_reference_wandb_run: ["kealexanderwang", "importance-reweighing", "waterbirds-undersampled-493", "last.ckpt"]
 
 callbacks:
@@ -38,7 +38,10 @@ optimizer:
     lr: 0.001
     momentum: 0.9
     weight_decay: 0.
-    #weight_decay: 0.0001
 
 architecture:
     arch: resnet50
+
+model:
+    regularization_type: weights
+    reference_regularization: 1.0

@@ -76,6 +76,8 @@ class ImbalancedClassifierModel(LightningModule):
                 self.reference_architecture.load_state_dict(
                     submodule_state_dict(reference_ckpt["state_dict"], "architecture")
                 )
+            else:
+                raise RuntimeError("No checkpoints or reference checkpoints given")
 
         if ckpt_path is not None:
             print(f"Loading from checkpoint path {ckpt_path}")
