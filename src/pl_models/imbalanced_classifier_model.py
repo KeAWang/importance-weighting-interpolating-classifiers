@@ -84,9 +84,11 @@ class ImbalancedClassifierModel(LightningModule):
                 submodule_state_dict(ckpt["state_dict"], "architecture")
             )
 
+        self.freeze_features = freeze_features
         if freeze_features:
             print("Freezing feature extractor")
             set_grad(self.architecture, requires_grad=False)
+            # Remember to set non-classifier layers to eval mode in self.train()!!!
         else:
             set_grad(self.architecture, requires_grad=True)
         set_grad(self.architecture.linear_output, requires_grad=True)
@@ -105,6 +107,18 @@ class ImbalancedClassifierModel(LightningModule):
             "train/loss": [],
             "val/loss": [],
         }
+
+    def train(self, mode: bool = True):
+        if mode:
+            super().train(True)
+            # make sure things like batch norm are actually frozen
+            if self.freeze_features:
+                self.architecture.eval()
+                self.architecture.linear_output.train()
+            if self.reference_architecture is not None:
+                self.reference_architecture.eval()
+        else:
+            super().train(False)
 
     def configure_optimizers(
         self,
@@ -152,21 +166,34 @@ class ImbalancedClassifierModel(LightningModule):
             x, y = batch
             w = torch.ones_like(y)
             other_data = {}
-        logits = self.forward(x)
-        preds = torch.argmax(logits, dim=-1)
-        loss = self.loss_fn(logits, y)
+
+        with torch.no_grad():
+            self.eval()
+            preds = torch.argmax(self(x), dim=-1)
+            self.train(training)
+
         # TODO: do we need to change the normalization?
         if training and self.dont_update_correct_extras:
             extra = batch.extra
-            # This will rescale to reflect the changed effective batch size
             correct = preds == y
-            # zero out the weights for extra samples that we got correct already
-            w = w * (~(extra & correct)).float()
-            reweighted_loss = (loss * w).sum(0) / (w.sum(0) + 1e-5)
-
-            # This will not rescale
-            # reweighted_loss = (loss * w * (preds != y).float()).sum(0) / w.sum(0)
+            # We need to prevent the model from even "seeing" the correct extra examples
+            # since otherwise the batch norm statistics will change
+            subset = ~(extra & correct)
+            if not torch.any(subset):
+                reweighted_loss = torch.tensor(0.0, device=x.device, requires_grad=True)
+                logits = None
+            else:
+                x_ = x[subset]
+                y_ = y[subset]
+                w_ = w[subset]
+                logits = self(x_)
+                loss = self.loss_fn(logits, y_)
+                reweighted_loss = (loss * w_).sum(0) / (
+                    w_.sum(0)
+                )  # prevent denom from blowing up when we get everything right
         else:
+            logits = self(x)
+            loss = self.loss_fn(logits, y)
             reweighted_loss = (loss * w).sum(0) / w.sum(0)
 
         if self.regularization_type == "logits":
@@ -188,7 +215,13 @@ class ImbalancedClassifierModel(LightningModule):
         total_loss = reweighted_loss + reg_term
         return (total_loss, reweighted_loss, reg_term), logits, preds, y, other_data
 
+    # See https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#hooks for hooks order
+    # Newest hooks are in https://github.com/PyTorchLightning/pytorch-lightning/pull/7713
+
     # def on_train_batch_start(self, batch, batch_idx, dataloader_idx):
+    #    breakpoint()
+
+    # def on_train_epoch_start(self):
     #    breakpoint()
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
