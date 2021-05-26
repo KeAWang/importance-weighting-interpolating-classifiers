@@ -6,8 +6,8 @@
 defaults:
     - /datamodule: waterbirds_datamodule.yaml
     - /model: imbalanced_classifier_model.yaml
-    - /optimizer: sgd.yaml                    
-    - /architecture: res_net.yaml                 
+    - /optimizer: sgd.yaml
+    - /architecture: res_net.yaml
     - /loss_fn: cross_entropy.yaml
 
 logger:
