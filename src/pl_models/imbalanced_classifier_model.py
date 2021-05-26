@@ -110,7 +110,7 @@ class ImbalancedClassifierModel(LightningModule):
         self,
     ) -> Union[Optimizer, Tuple[Sequence[Optimizer], Sequence[Any]]]:
         optimizer = hydra.utils.instantiate(
-            self.optimizer_config, params=self.parameters()
+            self.optimizer_config, params=trainable_parameters(self)
         )
         if self.lr_scheduler_config is not None:
             interval = self.lr_scheduler_config["interval"]
@@ -297,3 +297,19 @@ def submodule_state_dict(state_dict: Dict[str, torch.Tensor], submodule_name: st
         if k.startswith(f"{submodule_name}.")
     }
     return submodule_state_dict
+
+
+def trainable_parameters(module: torch.nn.Module):
+    # otherwise things like adam might change params even with requires_grad=False
+    # See https://discuss.pytorch.org/t/why-is-it-when-i-call-require-grad-false-on-all-my-params-my-weights-in-the-network-would-still-update/22126/4
+    for p in module.parameters():
+        if p.requires_grad:
+            yield p
+
+
+def trainable_named_parameters(module: torch.nn.Module):
+    # otherwise things like adam may change params even with requires_grad=False
+    # See https://discuss.pytorch.org/t/why-is-it-when-i-call-require-grad-false-on-all-my-params-my-weights-in-the-network-would-still-update/22126/4
+    for n, p in module.named_parameters():
+        if p.requires_grad:
+            yield n, p
