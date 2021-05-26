@@ -4,10 +4,10 @@
 defaults:
     - /datamodule: civilcomments_datamodule.yaml
     - /model: imbalanced_classifier_model.yaml
-    - /optimizer: adamw.yaml
+    - /optimizer: adamw.yaml # TODO: remove optimization bells and whistles
     - /architecture: distilbert_net.yaml                 
     - /loss_fn: cross_entropy.yaml
-    - /lr_scheduler: linear.yaml
+    - /lr_scheduler: linear.yaml  # TODO: remove optimization bells and whistles
 
 logger:
     wandb:
@@ -40,6 +40,7 @@ datamodule:
 optimizer:
     lr: 0.00001
     weight_decay: 0.01
+    # TODO: remove optimization bells and whistles
 
 model:
     dont_update_correct_extras: True
