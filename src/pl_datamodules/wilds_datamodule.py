@@ -54,7 +54,6 @@ class WILDSDataModule(GroupDataModule):
         Do not use it to assign state (self.x = y)."""
 
         # Initializing wilds_dataset.WILDSDataset will create data dir and download
-        # TODO: Check if actually downloads and unzip/tars
         _: wilds.datasets.wilds_dataset.WILDSDataset = wilds.get_dataset(
             dataset=self.dataset_name,
             root_dir=self.data_dir,
@@ -78,8 +77,9 @@ class WILDSDataModule(GroupDataModule):
         )
 
         if self.flatten_input:
-            train_transforms_list.append(transforms.Lambda(lambda x: torch.flatten(x)))
-            eval_transforms_list.append(transforms.Lambda(lambda x: torch.flatten(x)))
+            raise NotImplementedError
+            # train_transforms_list.append(transforms.Lambda(lambda x: torch.flatten(x)))
+            # eval_transforms_list.append(transforms.Lambda(lambda x: torch.flatten(x)))
         self.train_transform = transforms.Compose(train_transforms_list)
         self.eval_transform = transforms.Compose(eval_transforms_list)
 
