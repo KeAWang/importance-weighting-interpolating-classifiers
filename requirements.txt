@@ -23,6 +23,7 @@ python-dotenv
 pre-commit
 wilds
 transformers
+datasets
 #scikit-learn
 #pandas
 #matplotlib

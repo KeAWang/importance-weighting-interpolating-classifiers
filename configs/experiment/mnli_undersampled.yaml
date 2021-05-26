@@ -1,0 +1,39 @@
+# @package _global_
+# settings from https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py#L85
+
+defaults:
+    - /datamodule: mnli_datamodule.yaml
+    - /model: imbalanced_classifier_model.yaml
+    - /optimizer: adamw.yaml
+    - /architecture: distilbert_net.yaml                 
+    - /loss_fn: cross_entropy.yaml
+    - /lr_scheduler: linear.yaml
+
+logger:
+    wandb:
+        tags: ["mnli", "undersampled"]
+
+callbacks:
+    group_train_accuracy_monitor:
+        _target_: src.pl_callbacks.metrics_callbacks.GroupTrainAccuracyMonitor
+    group_val_accuracy_monitor:
+        _target_: src.pl_callbacks.metrics_callbacks.GroupValReweightedAccuracyMonitor
+
+trainer:
+    min_epochs: 1
+    max_epochs: 5
+    gradient_clip_val: 1.0
+
+datamodule:
+    wrapper_type: undersampled
+    tokenizer:
+        pretrained_model_name_or_path: ${architecture.model_name}
+
+    batch_size: 16
+    num_workers: 4
+    pin_memory: True
+    flatten_input: False
+
+optimizer:
+    lr: 0.00001
+    weight_decay: 0.01
