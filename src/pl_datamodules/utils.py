@@ -16,6 +16,7 @@ from ..datasets.utils import (
     ReweightedDataset,
     undersampling_schedule,
     UndersampledWithExtrasDataset,
+    UndersampledByGroupDataset,
 )
 from typing import Optional
 import sys

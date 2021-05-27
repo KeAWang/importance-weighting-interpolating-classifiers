@@ -1,9 +1,10 @@
 import torch
 
+from typing import Optional
 from .base_datamodule import GroupDataModule
 from torchvision.transforms import transforms
 from datasets import load_dataset
-from ..datasets.utils import ReweightedDataset
+from ..datasets.utils import ReweightedDataset, UndersampledByGroupDataset
 from ..datasets.mnli_dataset import MNLIDataset
 from transformers.tokenization_utils import PreTrainedTokenizer
 
@@ -14,10 +15,18 @@ class MNLIDataModule(GroupDataModule):
     dims = None  # TODO
 
     def __init__(
-        self, tokenizer: PreTrainedTokenizer, **kwargs,
+        self,
+        tokenizer: PreTrainedTokenizer,
+        train_frac: float,
+        new_group_sizes: Optional = None,
+        new_group_fracs: Optional = None,
+        **kwargs,
     ):
         super().__init__(**kwargs)
         self.tokenizer = tokenizer
+        self.train_frac = train_frac
+        self.new_group_sizes = new_group_sizes
+        self.new_group_fracs = new_group_fracs
 
     def prepare_data(self):
         """Download data if needed. This method is called only from a single GPU.
@@ -35,7 +44,21 @@ class MNLIDataModule(GroupDataModule):
         train_dataset = MNLIDataset(
             full_dataset["train"].filter(lambda example: example["label"] != -1),
             input_transform=train_transform,
+            frac=self.train_frac,
         )
+        if self.new_group_sizes is not None or self.new_group_fracs is not None:
+            new_train_dataset = UndersampledByGroupDataset(
+                train_dataset,
+                train_dataset.group_array,
+                self.new_group_sizes,
+                self.new_group_fracs,
+            )
+            new_train_dataset.y_array = train_dataset.y_array[new_train_dataset.indices]
+            new_train_dataset.group_array = train_dataset.group_array[
+                new_train_dataset.indices
+            ]
+            train_dataset = new_train_dataset
+
         val_dataset = MNLIDataset(
             full_dataset["validation_matched"].filter(
                 lambda example: example["label"] != -1
@@ -61,10 +84,11 @@ class MNLIDataModule(GroupDataModule):
 
 
 def init_transform(tokenizer):
-    def transform_inference(example):
+    def transform_inference(premise__hypothesis):
+        premise, hypothesis = premise__hypothesis
         encodings = tokenizer(
-            example["premise"],
-            example["hypothesis"],
+            premise,
+            hypothesis,
             truncation=True,
             padding="max_length",
             return_tensors="pt",

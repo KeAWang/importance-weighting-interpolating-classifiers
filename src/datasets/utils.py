@@ -7,6 +7,7 @@ from typing import Sequence, Optional, Dict, Union
 
 
 # UGH: Pytorch dataloaders don't support dataclasses, only namedtuples
+# See https://github.com/pytorch/pytorch/blob/9baf75c86edc7f6cd1c04bf9f42d18bc0d05f504/torch/utils/data/_utils/collate.py#L43
 LabeledDatapoint = namedtuple(
     "LabeledDatapoint", ("x", "y", "w"), defaults=(None, None, 1)
 )
@@ -40,28 +41,47 @@ class UndersampledByGroupDataset(Dataset):
         self,
         dataset: Dataset,
         group_ids: Sequence[int],
-        new_group_sizes: Union[Sequence[int], Dict[int, int]],
+        new_group_sizes: Optional[Union[Sequence[int], Dict[int, int]]] = None,
+        new_group_fracs: Optional[Union[Sequence[float], Dict[int, float]]] = None,
         generator=None,
     ):
-
-        if not isinstance(new_group_sizes, dict):
+        if (new_group_sizes is not None) and (new_group_fracs is not None):
+            raise ValueError(
+                f"new_group_sizes and new_group_fracs cannot both be specified"
+            )
+        if isinstance(new_group_sizes, dict):
             new_group_sizes = dict(enumerate(new_group_sizes))
+        elif isinstance(new_group_fracs, dict):
+            new_group_fracs = dict(enumerate(new_group_fracs))
+
         group_idxs = defaultdict(list)
         for i, g in enumerate(group_ids):
-            group_idxs[g].append(i)
+            group_idxs[int(g)].append(i)
+
+        if new_group_fracs is not None:
+            raise NotImplementedError
+            # new_group_sizes = {
+            #    g: int(len(group_idxs[g]) * frac) for g, frac in new_group_fracs
+            # }
 
         for g in group_idxs.keys():
-            assert (
-                new_group_sizes[g] <= group_idxs[g]
-            ), f"Group {g} has only {group_idxs[g]} samples, which is less than {new_group_sizes[g]} "
+            assert new_group_sizes[g] <= len(
+                group_idxs[g]
+            ), f"Group {g} has only {len(group_idxs[g])} samples, which is less than {new_group_sizes[g]} "
 
         indices = []
+        if generator is None:
+            generator = torch.Generator()
+            generator.manual_seed(
+                0
+            )  # ensure that we always choose the same examples with a group
         for g, idxs in group_idxs.items():
             idxs = torch.tensor(idxs)
             new_size = new_group_sizes[g]
             # equivalent of np.random.choice without replacement
-            sub_idxs = torch.randperm(len(idxs), generator=generator)[:new_size]
-            indices.append(sub_idxs)
+            choice = torch.randperm(len(idxs), generator=generator)[:new_size]
+            chosen_idxs = idxs[choice]
+            indices.append(chosen_idxs)
 
         self.indices = torch.cat(indices)
         self.dataset = dataset

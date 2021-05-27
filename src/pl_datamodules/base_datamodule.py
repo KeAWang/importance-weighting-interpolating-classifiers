@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, List
 from pytorch_lightning import LightningDataModule
 from torch.utils.data import DataLoader, Dataset
 from pathlib import Path
