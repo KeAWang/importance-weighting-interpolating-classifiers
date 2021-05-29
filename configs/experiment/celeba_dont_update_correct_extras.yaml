@@ -1,8 +1,5 @@
 # @package _global_
 
-# to execute this experiment run:
-# python run.py +experiment=celeba_undersampled
-
 defaults:
     - /datamodule: celeba_datamodule.yaml
     - /model: imbalanced_classifier_model.yaml
@@ -12,7 +9,9 @@ defaults:
 
 logger:
     wandb:
-        tags: ["binary", "celeba", "undersampled"]
+        tags: ["binary", "celeba", "undersampled-with-extras"]
+
+load_wandb_run: ["kealexanderwang", "importance-reweighing", "celeba-undersampled-513", "last.ckpt"]
 
 callbacks:
     group_train_accuracy_monitor:
@@ -25,12 +24,16 @@ trainer:
     max_epochs: 50
 
 datamodule:
-    wrapper_type: undersampled
+    wrapper_type: undersampled_with_extras
+
     resolution: [224, 224]
     batch_size: 64
     num_workers: 4
     pin_memory: True
     flatten_input: False
+
+model:
+    dont_update_correct_extras: True
 
 optimizer:
     lr: 0.0001

@@ -4,13 +4,17 @@ import tarfile
 
 from typing import Tuple, List
 from math import prod
-from .base_datamodule import BaseDataModule, IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD
+from .base_datamodule import (
+    GroupDataModule,
+    IMAGENET_DEFAULT_MEAN,
+    IMAGENET_DEFAULT_STD,
+)
 from torchvision.transforms import transforms
 from ..datasets.celeba_dataset import CelebADataset
 from ..datasets.utils import ReweightedDataset
 
 
-class CelebADataModule(BaseDataModule):
+class CelebADataModule(GroupDataModule):
     def __init__(
         self,
         resolution: Tuple[int, int],
@@ -67,31 +71,29 @@ class CelebADataModule(BaseDataModule):
             train_transform=self.train_transform,
             eval_transform=self.eval_transform,
         )
+
         dataset_splits = full_dataset.get_splits(["train", "val", "test"])
         train_dataset = dataset_splits["train"]
         val_dataset = dataset_splits["val"]
         test_dataset = dataset_splits["test"]
 
-        self.train_y_counter, self.train_g_counter = self.count(train_dataset)
+        self.train_y_counter, self.train_g_counter, _ = self.compute_weights(
+            train_dataset
+        )
         print(f"Train class counts: {self.train_y_counter}")
         print(f"Train group counts: {self.train_g_counter}")
-        self.val_y_counter, self.val_g_counter = self.count(val_dataset)
+        self.val_y_counter, self.val_g_counter, val_weights = self.compute_weights(
+            val_dataset
+        )
         print(f"Val class counts: {self.val_y_counter}")
         print(f"Val group counts: {self.val_g_counter}")
-        self.test_y_counter, self.test_g_counter = self.count(test_dataset)
+        self.test_y_counter, self.test_g_counter, test_weights = self.compute_weights(
+            test_dataset
+        )
         print(f"Test class counts: {self.test_y_counter}")
         print(f"Test group counts: {self.test_g_counter}")
 
-        val_weights = torch.ones(len(val_dataset))
-        group_weight_map = {g: 1 / count for g, count in self.val_g_counter.items()}
-        for g, weight in group_weight_map.items():
-            val_weights[val_dataset.group_array == g] *= weight
         val_dataset = ReweightedDataset(val_dataset, weights=val_weights)
-
-        test_weights = torch.ones(len(test_dataset))
-        group_weight_map = {g: 1 / count for g, count in self.test_g_counter.items()}
-        for g, weight in group_weight_map.items():
-            test_weights[test_dataset.group_array == g] *= weight
         test_dataset = ReweightedDataset(test_dataset, weights=test_weights)
 
         self.train_dataset = train_dataset
