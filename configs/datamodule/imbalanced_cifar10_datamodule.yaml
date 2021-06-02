@@ -16,6 +16,10 @@ wrapper_type: null
 #
 # CIFAR10 classes are balanced, with 5000 examples per class in the train set
 # and 1000 examples per class in the test set
+imb_type: exp
+imb_factor: 100
+data_augmentation: False
+
 
 flatten_input: False
 data_dir: ${data_dir}  # data_dir is specified in config.yaml

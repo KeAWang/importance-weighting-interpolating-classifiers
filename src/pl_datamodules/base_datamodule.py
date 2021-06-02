@@ -99,3 +99,7 @@ class GroupDataModule(BaseDataModule):
 
 IMAGENET_DEFAULT_MEAN = [0.485, 0.456, 0.406]
 IMAGENET_DEFAULT_STD = [0.229, 0.224, 0.225]
+
+# see https://github.com/kuangliu/pytorch-cifar/issues/19 for example
+CIFAR_DEFAULT_MEAN = [0.4914, 0.4822, 0.4465]
+CIFAR_DEFAULT_STD = [0.247, 0.243, 0.261]

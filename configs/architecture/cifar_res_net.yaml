@@ -1,0 +1,6 @@
+_target_: src.architectures.resnet.CIFARResNet
+arch: null
+input_size: [3, 32, 32]
+output_size: null
+init_channels: 64
+

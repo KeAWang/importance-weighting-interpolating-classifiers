@@ -1,17 +1,14 @@
-## Based on: https://gitlab.com/harvard-machine-learning/double-descent/-/blob/master/models/resnet18k.py
 from .simple_models import Size
 from .simclr.resnet_wider import ResNet as WiderResNet, Bottleneck, BasicBlock
 from torchvision.models.resnet import model_urls
 from torchvision.models.utils import load_state_dict_from_url
 from typing import Optional
 
-## ResNet18 for CIFAR
-## Based on: https://github.com/kuangliu/pytorch-cifar/blob/master/models/preact_resnet.py
 
 import torch.nn as nn
 import torch.nn.functional as F
 
-
+# CIFARResNet based on: https://gitlab.com/harvard-machine-learning/double-descent/-/blob/master/models/resnet18k.py and https://github.com/kuangliu/pytorch-cifar/blob/master/models/preact_resnet.py
 class PreActBlock(nn.Module):
     """Pre-activation version of the BasicBlock."""
 
@@ -48,14 +45,65 @@ class PreActBlock(nn.Module):
         return out
 
 
+class PreActBottleneck(nn.Module):
+    """Pre-activation version of the original Bottleneck module."""
+
+    expansion = 4
+
+    def __init__(self, in_planes, planes, stride=1):
+        super(PreActBottleneck, self).__init__()
+        self.bn1 = nn.BatchNorm2d(in_planes)
+        self.conv1 = nn.Conv2d(in_planes, planes, kernel_size=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(planes)
+        self.conv2 = nn.Conv2d(
+            planes, planes, kernel_size=3, stride=stride, padding=1, bias=False
+        )
+        self.bn3 = nn.BatchNorm2d(planes)
+        self.conv3 = nn.Conv2d(
+            planes, self.expansion * planes, kernel_size=1, bias=False
+        )
+
+        if stride != 1 or in_planes != self.expansion * planes:
+            self.shortcut = nn.Sequential(
+                nn.Conv2d(
+                    in_planes,
+                    self.expansion * planes,
+                    kernel_size=1,
+                    stride=stride,
+                    bias=False,
+                )
+            )
+
+    def forward(self, x):
+        out = F.relu(self.bn1(x))
+        shortcut = self.shortcut(out) if hasattr(self, "shortcut") else x
+        out = self.conv1(out)
+        out = self.conv2(F.relu(self.bn2(out)))
+        out = self.conv3(F.relu(self.bn3(out)))
+        out += shortcut
+        return out
+
+
 class CIFARResNet(nn.Module):
     input_size = (3, 32, 32)
 
     def __init__(
-        self, input_size: Size, output_size: Size, block, num_blocks, init_channels=64
+        self, arch: str, input_size: Size, output_size: Size, init_channels=64,
     ):
         assert tuple(input_size) == self.input_size
         super(CIFARResNet, self).__init__()
+        if arch == "resnet18":
+            block = PreActBlock
+            num_blocks = [2, 2, 2, 2]
+        elif arch == "resnet34":
+            block = PreActBlock
+            num_blocks = [3, 4, 6, 3]
+        elif arch == "resnet50":
+            block = PreActBottleneck
+            num_blocks = [3, 4, 6, 3]
+        else:
+            raise ValueError(f"{arch} is not a supported type of ResNet!")
+
         self.in_planes = init_channels
         c = init_channels
 
@@ -89,13 +137,6 @@ class CIFARResNet(nn.Module):
     @property
     def linear_output(self):
         return self.linear
-
-
-def make_resnet18k(input_size: Size, output_size: Size, k: int = 64) -> CIFARResNet:
-    """ Returns a ResNet18 for CIFAR-sized data with width parameter k. (k=64 is standard ResNet18)"""
-    return CIFARResNet(
-        input_size, output_size, PreActBlock, [2, 2, 2, 2], init_channels=k
-    )
 
 
 class ResNet(WiderResNet):

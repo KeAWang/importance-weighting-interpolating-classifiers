@@ -11,17 +11,23 @@ class ImbalancedCIFAR10Dataset(Dataset):
     num_classes = 10
     cifar_cls_name = "CIFAR10"
 
+    # TODO allow specific classes
     def __init__(
         self,
         root: str,
         imb_type: str,
-        imb_factor: float,
+        imb_factor: Optional[int] = None,
         generator: Optional[Generator] = None,
         train: bool = True,
         transform: Optional[Callable] = None,
         target_transform: Optional[Callable] = None,
         download: bool = False,
     ) -> None:
+
+        if imb_type == "none":
+            imb_factor = 1
+        else:
+            assert imb_factor is not None
 
         cifar_dataset = getattr(torchvision.datasets, self.cifar_cls_name)(
             root=root,
@@ -49,8 +55,11 @@ class ImbalancedCIFAR10Dataset(Dataset):
         self.group_array = self.y_array
 
     @staticmethod
-    def _get_img_num_per_cls(cifar_dataset, num_classes, imb_type, imb_factor):
+    def _get_img_num_per_cls(
+        cifar_dataset, num_classes: int, imb_type: str, imb_factor: int
+    ):
         """Modified from https://github.com/kaidic/LDAM-DRW/blob/master/imbalance_cifar.py"""
+        imb_factor = 1 / imb_factor
         img_max = len(cifar_dataset) / num_classes  # CIFAR datasets are balanced
         img_num_per_cls = []
         if imb_type == "exp":

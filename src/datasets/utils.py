@@ -49,9 +49,9 @@ class UndersampledByGroupDataset(Dataset):
             raise ValueError(
                 f"new_group_sizes and new_group_fracs cannot both be specified"
             )
-        if isinstance(new_group_sizes, dict):
+        if isinstance(new_group_sizes, list):
             new_group_sizes = dict(enumerate(new_group_sizes))
-        elif isinstance(new_group_fracs, dict):
+        elif isinstance(new_group_fracs, list):
             new_group_fracs = dict(enumerate(new_group_fracs))
 
         group_idxs = defaultdict(list)
