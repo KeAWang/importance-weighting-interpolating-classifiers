@@ -8,3 +8,4 @@ wandb:
     job_type: "train"
     group: ""
     save_dir: "."
+    notes: ""
