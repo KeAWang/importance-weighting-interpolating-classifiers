@@ -1,4 +1,28 @@
+## Basic setup
+Make a weights and bias account
+
+1. `conda env create -f is_env.yml`
+2. `pip install requirements.txt`
+3. Copy `.env.tmp` to a new file called `.env`. If you're on the NLP cluster, you can leave `.env` as is without any changes (will automatically be set through `run.py`). Otherwise if you're running locally, edit the `PERSONAL_DIR` environment variable to be the root directory of where you want to store your data. 
+4. Simplest command: `python run.py +experiment=celeba_erm`. Experiment settings are managed by (hydra)[https://hydra.cc/], a hierarchical config framework, and the setting files are specified in the `configs/` directory.
+
+## Example of a shell script for running on the NLP cluster
+```
+#!/bin/bash
+mynlprun="nlprun3 -x jagupard[19-20],jagupard[25-29]"  # exclude certain machines
+seed=0
+experiment=cifar_exp_100
+method=reweighted
+for weight_decay in 0.05 0.01 0.005; do
+    ${mynlprun} "python run.py +experiment=${experiment} seed=${seed} datamodule.wrapper_type=${method} optimizer.weight_decay=${weight_decay}" \
+        -a is -g 1 -n "${experiment}-${seed}-$(date '+%d-%m-%Y_%H:%M:%S')"
+    sleep 1
+done
+```
+# IGNORE EVERYTHING BELOW THIS (unless you want to learn the general template of the repo)
+
 <div align="center">
+
 
 # Lightning-Hydra-Template
 
