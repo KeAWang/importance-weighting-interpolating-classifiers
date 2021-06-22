@@ -11,6 +11,7 @@ defaults:
     #- override hydra/job_logging: colorlog
 
 seed: 0
+ensemble: 1
 
 # path to original working directory
 # hydra hijacks working directory by changing it to the current log directory,

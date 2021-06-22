@@ -131,6 +131,7 @@ class UndersampledDataset(Dataset):
             unif_rv <= weights / weights_upper_bound, as_tuple=True
         )[0]
         self.indices = indices
+        print("DEBUG INFO: selected ids are "+str(self.indices))
 
     def __getitem__(self, idx):
         return self.dataset[self.indices[idx]]

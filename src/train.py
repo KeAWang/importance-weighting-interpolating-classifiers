@@ -141,7 +141,44 @@ def train(config: DictConfig) -> Optional[float]:
 
     # Train the model
     log.info("Starting training!")
-    trainer.fit(model=model, datamodule=datamodule)
+
+    if "ensemble" in config and config.ensemble > 1:
+        #TODO: this is probably best in a utils directory
+        model_list = []
+        for runit in range(config.ensemble):
+            seed_everything(runit+config.seed)
+            # just re-init everything just to make sure we have fresh copies
+            # TODO: only re-init the necessary parts?
+            hydra_objects = hydra_init(config)
+            model = hydra_objects.model
+            datamodule = hydra_objects.datamodule
+            trainer = hydra_objects.trainer
+            callbacks = hydra_objects.callbacks
+            logger = hydra_objects.logger
+            log.info("Logging ensemble hyperparms")
+            template_utils.log_hyperparameters(
+                config=config,
+                model=model,
+                datamodule=datamodule,
+                trainer=trainer,
+                callbacks=callbacks,
+                logger=logger,
+            )
+            log.info("Starting ensemble training!")
+            trainer.fit(model=model, datamodule=datamodule)
+            # TODO: this might blow up gpu memory
+            model_list.append(model)
+        # average params
+        model_param_dict = dict(model.named_parameters())
+        for name, param in model_param_dict.items():
+            param.data = torch.zeros_like(param.data)
+        for ens_member in model_list:
+            for name, param in ens_member.named_parameters():
+                assert(name in model_param_dict)
+                model_param_dict[name].data += param.data / float(len(model_list))
+        model.load_state_dict(model_param_dict)
+    else:
+        trainer.fit(model=model, datamodule=datamodule)
 
     # Evaluate model on test set after training
     # if not config.trainer.get("fast_dev_run"):
