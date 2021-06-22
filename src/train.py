@@ -169,13 +169,19 @@ def train(config: DictConfig) -> Optional[float]:
             # TODO: this might blow up gpu memory
             model_list.append(model)
         # average params
-        model_param_dict = dict(model.named_parameters())
+        model_param_dict = dict(model.state_dict())
         for name, param in model_param_dict.items():
             param.data = torch.zeros_like(param.data)
         for ens_member in model_list:
-            for name, param in ens_member.named_parameters():
+            for name, param in ens_member.state_dict().items():
                 assert(name in model_param_dict)
-                model_param_dict[name].data += param.data / float(len(model_list))
+                # parameter average floats. leave other dtypes alone because we'll cause errors averaging longs
+                if param.data.dtype == torch.float:
+                    model_param_dict[name].data += param.data / float(len(model_list))
+                else:
+                    print(param.data.dtype)
+                    print(name) # the only things here should be num_batches_tracked in batch norm
+                    model_param_dict[name].data += param.data
         model.load_state_dict(model_param_dict)
     else:
         trainer.fit(model=model, datamodule=datamodule)
