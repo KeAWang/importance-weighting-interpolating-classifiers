@@ -19,6 +19,18 @@ for weight_decay in 0.05 0.01 0.005; do
     sleep 1
 done
 ```
+
+## Running an ensemble 
+To run an ensemble and do weight averaging, use the ensemble keyword, and use
+a datamodule that has stochasticity (e.g. undersampling)
+```
++experiment=cifar_exp_100
+trainer.max_epochs=5
+seed=1
+ensemble=5
+datamodule.wrapper_type=undersampled
+```
+
 # IGNORE EVERYTHING BELOW THIS (unless you want to learn the general template of the repo)
 
 <div align="center">
