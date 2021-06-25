@@ -143,14 +143,17 @@ def train(config: DictConfig) -> Optional[float]:
     log.info("Starting training!")
 
     if "ensemble" in config and config.ensemble > 1:
+        # reset model params to zero - will ensemble after
+        model_param_dict = dict(model.state_dict())
+        for name, param in model_param_dict.items():
+            param.data = torch.zeros_like(param.data)
         #TODO: this is probably best in a utils directory
-        model_list = []
         for runit in range(config.ensemble):
             seed_everything(runit+config.seed)
             # just re-init everything just to make sure we have fresh copies
             # TODO: only re-init the necessary parts?
             hydra_objects = hydra_init(config)
-            model = hydra_objects.model
+            model_ens = hydra_objects.model
             datamodule = hydra_objects.datamodule
             trainer = hydra_objects.trainer
             callbacks = hydra_objects.callbacks
@@ -158,30 +161,25 @@ def train(config: DictConfig) -> Optional[float]:
             log.info("Logging ensemble hyperparms")
             template_utils.log_hyperparameters(
                 config=config,
-                model=model,
+                model=model_ens,
                 datamodule=datamodule,
                 trainer=trainer,
                 callbacks=callbacks,
                 logger=logger,
             )
             log.info("Starting ensemble training!")
-            trainer.fit(model=model, datamodule=datamodule)
-            # TODO: this might blow up gpu memory
-            model_list.append(model)
-        # average params
-        model_param_dict = dict(model.state_dict())
-        for name, param in model_param_dict.items():
-            param.data = torch.zeros_like(param.data)
-        for ens_member in model_list:
-            for name, param in ens_member.state_dict().items():
+            trainer.fit(model=model_ens, datamodule=datamodule)
+            # acccumulate the params into the main model
+            for name, param in model_ens.state_dict().items():
                 assert(name in model_param_dict)
                 # parameter average floats. leave other dtypes alone because we'll cause errors averaging longs
                 if param.data.dtype == torch.float:
-                    model_param_dict[name].data += param.data / float(len(model_list))
+                    model_param_dict[name].data += param.data / float(len(model_ens))
                 else:
                     print(param.data.dtype)
                     print(name) # the only things here should be num_batches_tracked in batch norm
                     model_param_dict[name].data += param.data
+        # set overall model to averaged params
         model.load_state_dict(model_param_dict)
     else:
         trainer.fit(model=model, datamodule=datamodule)
