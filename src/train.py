@@ -174,15 +174,15 @@ def train(config: DictConfig) -> Optional[float]:
                 assert(name in model_param_dict)
                 # parameter average floats. leave other dtypes alone because we'll cause errors averaging longs
                 if param.data.dtype == torch.float:
-                    model_param_dict[name].data += param.data / float(len(model_ens))
+                    model_param_dict[name].data += param.data / float(config.ensemble)
                 else:
                     print(param.data.dtype)
                     print(name) # the only things here should be num_batches_tracked in batch norm
                     model_param_dict[name].data += param.data
         # set overall model to averaged params
         model.load_state_dict(model_param_dict)
-    else:
-        trainer.fit(model=model, datamodule=datamodule)
+
+    trainer.fit(model=model, datamodule=datamodule)
 
     # Evaluate model on test set after training
     # if not config.trainer.get("fast_dev_run"):
