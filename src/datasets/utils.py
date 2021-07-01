@@ -394,3 +394,47 @@ class UndersampledWithExtrasDataset(UndersampledDataset):
 
     def __len__(self):
         return len(self.dataset)
+
+
+class SubsetOfGroupedDataset(Dataset):
+    def __init__(self, dataset: Dataset, indices: Sequence[int]):
+        self.dataset = dataset
+        self.indices = indices
+
+    def __getitem__(self, idx):
+        return self.dataset[self.indices[idx]]
+
+    def __len__(self):
+        return len(self.indices)
+
+    @property
+    def group_array(self):
+        return (
+            self.dataset.group_array[self.indices]
+            if hasattr(self.dataset, "group_array")
+            else None
+        )
+
+    @property
+    def y_array(self):
+        return (
+            self.dataset.y_array[self.indices]
+            if hasattr(self.dataset, "y_array")
+            else None
+        )
+
+
+def split_dataset(dataset: Dataset, indices_or_sections, shuffle=False, seed=None):
+    # `indices_or_sections` follows format of np.split
+    all_indices = np.arange(len(dataset))
+
+    if shuffle:
+        rng = np.random.default_rng(seed)
+        perm = rng.permutation(len(all_indices))
+        all_indices = all_indices[perm]
+
+    indices_list = np.split(all_indices, indices_or_sections)
+    subset_datasets = tuple(
+        SubsetOfGroupedDataset(dataset, indices) for indices in indices_list
+    )
+    return subset_datasets
