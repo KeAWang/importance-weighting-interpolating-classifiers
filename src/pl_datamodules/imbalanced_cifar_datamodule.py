@@ -6,7 +6,7 @@ from .base_datamodule import (
 from math import prod
 from torchvision.transforms import transforms
 from ..datasets.imbalanced_cifar_datasets import ImbalancedCIFAR10Dataset
-from ..datasets.utils import ReweightedDataset
+from ..datasets.utils import ReweightedDataset, split_dataset
 import torch
 
 
@@ -65,7 +65,7 @@ class ImbalancedCIFAR10DataModule(GroupDataModule):
         """Download data if needed. This method is called only from a single GPU.
         Do not use it to assign state (self.x = y)."""
         self.prepare_base_train_dataset()
-        self.prepare_base_val_dataset()
+        self.prepare_base_test_dataset()
 
     def prepare_base_train_dataset(self):
         dataset = ImbalancedCIFAR10Dataset(
@@ -78,7 +78,7 @@ class ImbalancedCIFAR10DataModule(GroupDataModule):
         )
         return dataset
 
-    def prepare_base_val_dataset(self):
+    def prepare_base_test_dataset(self):
         # Note: Using test set as validation set
         dataset = ImbalancedCIFAR10Dataset(
             root=self.data_dir,
@@ -91,18 +91,34 @@ class ImbalancedCIFAR10DataModule(GroupDataModule):
 
     def setup(self, stage=None):
         """Load data. Set variables: self.train_dataset, self.data_val, self.test_dataset."""
-        # get only datapoints that belong to classes
         base_train_dataset = self.prepare_base_train_dataset()
-        self.train_y_counter, self.train_g_counter = self.count(base_train_dataset)
+        num_train_full = len(base_train_dataset)
+        num_train = int(0.8 * num_train_full)  # 80/20 split
+        # WARNING: val dataset will have the same transforms as the train dataset!
+        train_dataset, val_dataset = split_dataset(
+            base_train_dataset, [num_train], shuffle=True, seed=0
+        )  # always use seed 0 for split
+
+        test_dataset = self.prepare_base_test_dataset()
+
+        self.train_y_counter, self.train_g_counter = self.count(train_dataset)
         print(f"Train class counts: {self.train_y_counter}")
         print(f"Train group counts: {self.train_g_counter}")
-        self.train_dataset = base_train_dataset
+        self.train_dataset = train_dataset
 
-        base_val_dataset = self.prepare_base_val_dataset()
-        _, _, val_weights = self.compute_weights(base_val_dataset)
-        self.val_dataset = ReweightedDataset(base_val_dataset, weights=val_weights)
+        self.val_y_counter, self.val_g_counter = self.count(val_dataset)
+        print(f"Val class counts: {self.val_y_counter}")
+        print(f"Val group counts: {self.val_g_counter}")
+        _, _, val_weights = self.compute_weights(val_dataset)
+        val_dataset = ReweightedDataset(val_dataset, weights=val_weights)
+        self.val_dataset = val_dataset
 
-        # TODO: don't validate on test set?
+        self.test_y_counter, self.test_g_counter = self.count(test_dataset)
+        print(f"Test class counts: {self.test_y_counter}")
+        print(f"Test group counts: {self.test_g_counter}")
+        _, _, test_weights = self.compute_weights(test_dataset)
+        test_dataset = ReweightedDataset(test_dataset, weights=test_weights)
+        self.test_dataset = test_dataset
 
 
 class ImbalancedCIFAR100DataModule(ImbalancedCIFAR10DataModule):
