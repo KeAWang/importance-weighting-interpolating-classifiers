@@ -4,7 +4,11 @@ from typing import Optional
 from .base_datamodule import GroupDataModule
 from torchvision.transforms import transforms
 from datasets import load_dataset
-from ..datasets.utils import ReweightedDataset, UndersampledByGroupDataset
+from ..datasets.utils import (
+    ReweightedDataset,
+    UndersampledByGroupDataset,
+    split_dataset,
+)
 from ..datasets.mnli_dataset import MNLIDataset
 from transformers.tokenization_utils import PreTrainedTokenizer
 
@@ -39,7 +43,7 @@ class MNLIDataModule(GroupDataModule):
         full_dataset = load_dataset(self.dataset_name, cache_dir=self.data_dir)
 
         train_transform = init_transform(self.tokenizer)
-        val_transform = init_transform(self.tokenizer)
+        eval_transform = init_transform(self.tokenizer)
 
         train_dataset = MNLIDataset(
             full_dataset["train"].filter(lambda example: example["label"] != -1),
@@ -59,11 +63,18 @@ class MNLIDataModule(GroupDataModule):
             ]
             train_dataset = new_train_dataset
 
-        val_dataset = MNLIDataset(
+        num_train_full = len(train_dataset)
+        num_train = int(0.8 * num_train_full)  # 80/20 split
+        # WARNING: val dataset will have the same transforms as the train dataset!
+        train_dataset, val_dataset = split_dataset(
+            train_dataset, [num_train], shuffle=True, seed=0
+        )  # always use seed 0 for split
+
+        test_dataset = MNLIDataset(
             full_dataset["validation_matched"].filter(
                 lambda example: example["label"] != -1
             ),
-            input_transform=val_transform,
+            input_transform=eval_transform,
         )
 
         self.train_y_counter, self.train_g_counter, _ = self.compute_weights(
@@ -71,16 +82,24 @@ class MNLIDataModule(GroupDataModule):
         )
         print(f"Train class counts: {self.train_y_counter}")
         print(f"Train group counts: {self.train_g_counter}")
+
         self.val_y_counter, self.val_g_counter, val_weights = self.compute_weights(
             val_dataset
         )
         print(f"Val class counts: {self.val_y_counter}")
         print(f"Val group counts: {self.val_g_counter}")
-
         val_dataset = ReweightedDataset(val_dataset, weights=val_weights)
+
+        self.test_y_counter, self.test_g_counter, test_weights = self.compute_weights(
+            test_dataset
+        )
+        print(f"Test class counts: {self.test_y_counter}")
+        print(f"Test group counts: {self.test_g_counter}")
+        test_dataset = ReweightedDataset(test_dataset, weights=test_weights)
 
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
+        self.test_dataset = test_dataset
 
 
 def init_transform(tokenizer):
