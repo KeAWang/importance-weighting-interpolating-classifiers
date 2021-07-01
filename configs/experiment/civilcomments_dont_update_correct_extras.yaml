@@ -13,12 +13,6 @@ logger:
     wandb:
         tags: ["civilcomments", "undersampled-with-extras"]
 
-callbacks:
-    group_train_accuracy_monitor:
-        _target_: src.pl_callbacks.metrics_callbacks.GroupTrainAccuracyMonitor
-    group_val_accuracy_monitor:
-        _target_: src.pl_callbacks.metrics_callbacks.GroupValReweightedAccuracyMonitor
-
 load_wandb_run: ["kealexanderwang", "importance-reweighing", "civilcomments-undersampled-546", "last.ckpt"]
 
 trainer:

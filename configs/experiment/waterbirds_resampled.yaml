@@ -14,12 +14,6 @@ logger:
     wandb:
         tags: ["binary", "waterbirds", "resampled"]
 
-callbacks:
-    group_train_accuracy_monitor:
-        _target_: src.pl_callbacks.metrics_callbacks.GroupTrainAccuracyMonitor
-    group_val_accuracy_monitor:
-        _target_: src.pl_callbacks.metrics_callbacks.GroupValReweightedAccuracyMonitor
-
 trainer:
     min_epochs: 1
     max_epochs: 50

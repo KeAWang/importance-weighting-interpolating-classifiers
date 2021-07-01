@@ -144,9 +144,12 @@ def train(config: DictConfig) -> Optional[float]:
     trainer.fit(model=model, datamodule=datamodule)
 
     # Evaluate model on test set after training
-    # if not config.trainer.get("fast_dev_run"):
-    #    log.info("Starting testing!")
-    #    trainer.test()
+    if not config.trainer.get("fast_dev_run"):
+        log.info("Starting testing!")
+        if config.test_on_best_ckpt:
+            trainer.test(ckpt_path="best")  # load the best checkpoint
+        else:
+            trainer.test(model)  # load the best checkpoint
 
     # Make sure everything closed properly
     log.info("Finalizing!")

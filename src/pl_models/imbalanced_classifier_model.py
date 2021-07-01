@@ -300,6 +300,18 @@ class ImbalancedClassifierModel(LightningModule):
         frac_predicted_pos = num_pos_pred / num_examples
         self.log("val/frac_predicted_pos", frac_predicted_pos, prog_bar=False)
 
+    def test_step(self, batch: Any, batch_idx: int):
+        losses, logits, preds, targets, other_data = self.step(batch, training=False)
+        loss, ce_term, reg_term = losses
+
+        return {
+            "loss": loss,
+            "logits": logits,
+            "preds": preds,
+            "targets": targets,
+            **other_data,
+        }
+
 
 def set_grad(module: torch.nn.Module, requires_grad):
     for param in module.parameters():

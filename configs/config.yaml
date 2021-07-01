@@ -12,6 +12,8 @@ defaults:
 
 seed: 0
 
+test_on_best_ckpt: False
+
 # path to original working directory
 # hydra hijacks working directory by changing it to the current log directory,
 # so it's useful to have this path as a special variable

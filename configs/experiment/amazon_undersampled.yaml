@@ -1,8 +1,9 @@
 # @package _global_
-# settings from https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py#L85
+# settings from https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py#L2
+# TODO: need to incorporate n_groups_per_batch?
 
 defaults:
-    - /datamodule: mnli_datamodule.yaml
+    - /datamodule: amazon_datamodule.yaml
     - /model: imbalanced_classifier_model.yaml
     - /optimizer: adamw.yaml
     - /architecture: distilbert_net.yaml                 
@@ -11,18 +12,20 @@ defaults:
 
 logger:
     wandb:
-        tags: ["mnli", "erm"]
+        tags: ["amazon", "undersampled"]
 
 trainer:
     min_epochs: 1
-    max_epochs: 5
+    max_epochs: 3
     gradient_clip_val: 1.0
 
 datamodule:
+    wrapper_type: undersampled
+
     tokenizer:
         pretrained_model_name_or_path: ${architecture.model_name}
 
-    batch_size: 16
+    batch_size: 8
     num_workers: 4
     pin_memory: True
     flatten_input: False

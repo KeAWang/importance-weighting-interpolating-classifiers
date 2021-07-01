@@ -1,18 +1,24 @@
 model_checkpoint:
     _target_: pytorch_lightning.callbacks.ModelCheckpoint
-    monitor: "val/acc"      # name of the logged metric which determines when model is improving
+    monitor: "val/val_reweighted_acc"      # name of the logged metric which determines when model is improving
     #every_n_val_epochs: 10  # Not yet available in pytorch_lightning 1.2.6
     #period: 10  #pl version 1.2.6 setting. Will replaced by ever_n_val_epochs
     #save_top_k: -1           # save k best models (determined by above metric)
-    #mode: "max"             # can be "max" or "min" when save_top_k is set
+    mode: "max"             # can be "max" or "min" when save_top_k is set
     period: 1
-    save_top_k: null
+    save_top_k: 1
     save_last: True         # additionaly always save model from last epoch
     save_weights_only: True
     verbose: False
     dirpath: 'checkpoints/'
     filename: '{epoch:02d}'
 
+group_train_accuracy_monitor:
+    _target_: src.pl_callbacks.metrics_callbacks.GroupTrainAccuracyMonitor
+group_val_accuracy_monitor:
+    _target_: src.pl_callbacks.metrics_callbacks.GroupValReweightedAccuracyMonitor
+group_test_accuracy_monitor:
+    _target_: src.pl_callbacks.metrics_callbacks.GroupTestReweightedAccuracyMonitor
 
 #early_stopping:
 #    _target_: pytorch_lightning.callbacks.EarlyStopping

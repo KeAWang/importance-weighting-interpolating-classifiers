@@ -1,5 +1,6 @@
 # @package _global_
-# settings from https://github.com/p-lambda/wilds/blob/e95bba8408aff524b48b96a4e7648df72773ad60/examples/configs/datasets.py#L85
+
+
 
 defaults:
     - /datamodule: mnli_datamodule.yaml
@@ -11,7 +12,9 @@ defaults:
 
 logger:
     wandb:
-        tags: ["mnli", "undersampled"]
+        tags: ["mnli", "undersampled-with-extras"]
+
+load_wandb_run: ["kealexanderwang", "importance-reweighing", "mnli-uneven-undersampled-683", "last.ckpt"]
 
 trainer:
     min_epochs: 1
@@ -25,7 +28,7 @@ trainer:
 #Total in train should be 392702
 
 datamodule:
-    wrapper_type: undersampled
+    wrapper_type: undersampled_with_extras
 
     tokenizer:
         pretrained_model_name_or_path: ${architecture.model_name}
@@ -38,8 +41,9 @@ datamodule:
     pin_memory: True
     flatten_input: False
 
+model:
+    dont_update_correct_extras: True
+
 optimizer:
     lr: 0.00001
     weight_decay: 0.01
-
-

@@ -83,6 +83,17 @@ class GroupValAccuracyMonitor(GroupAccuracyMonitor):
         self.on_epoch_end_shared(pl_module)
 
 
+class GroupTestAccuracyMonitor(GroupAccuracyMonitor):
+    def __init__(self):
+        super().__init__(mode="test")
+
+    def on_test_batch_end(self, trainer, pl_module, outputs, *args, **kwargs):
+        self.on_batch_end_shared(outputs)
+
+    def on_test_epoch_end(self, trainer, pl_module, *args, **kwargs):
+        self.on_epoch_end_shared(pl_module)
+
+
 class GroupValReweightedAccuracyMonitor(Callback):
     train_group_counts: Counter
     val_preds: list
@@ -174,3 +185,99 @@ class GroupValReweightedAccuracyMonitor(Callback):
             )
 
         self.reset()
+
+
+class GroupTestReweightedAccuracyMonitor(Callback):
+    train_group_counts: Counter
+    test_preds: list
+    test_targets: list
+    test_groups: list
+    test_weights: list
+
+    def __init__(self):
+        super().__init__()
+        self.reset()
+
+    def reset(self):
+        self.train_group_counts = Counter()
+        self.test_preds = []
+        self.test_targets = []
+        self.test_groups = []
+        self.test_weights = []
+
+    def on_train_epoch_start(self, trainer, pl_module):
+        self.reset()  # use counts from the most recent train epoch
+
+    def on_train_batch_end(
+        self, trainer, pl_module, outputs: List[List[dict]], *args, **kwargs
+    ):
+        assert len(outputs) == 1
+        assert len(outputs[0]) == 1
+        outputs = outputs[0][0]["extra"]
+        self.train_group_counts += Counter(outputs["g"].tolist())
+
+    def on_test_batch_end(self, trainer, pl_module, outputs, *args, **kwargs):
+        """Gather data from single batch."""
+        self.test_preds.append(outputs["preds"])
+        self.test_targets.append(outputs["targets"])
+        self.test_groups.append(outputs["g"])
+        self.test_weights.append(outputs["w"])
+
+    def on_test_epoch_end(self, trainer, pl_module, *args, **kwargs):
+        # concatenate saved tensors from each batch
+        group_labels = torch.cat(self.test_groups)
+        class_labels = torch.cat(self.test_targets)
+        pred_labels = torch.cat(self.test_preds)
+        weights = torch.cat(self.test_weights)
+
+        correct = (class_labels == pred_labels).float()
+
+        group_accs = {}
+        worst_acc = float("inf")
+        for g in torch.unique(group_labels).tolist():
+            in_g = group_labels == g
+            acc = correct[in_g].mean().item()
+            group_accs[g] = acc
+            worst_acc = min(worst_acc, acc)
+
+            pl_module.log(
+                f"test/group_{g}_acc",
+                acc,
+                on_step=False,
+                on_epoch=True,
+                prog_bar=False,
+            )
+        pl_module.log(
+            "test/worst_group_acc",
+            worst_acc,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
+
+        test_reweighted_acc = (correct * weights).sum(0) / weights.sum(0)
+        pl_module.log(
+            "test/test_reweighted_acc",
+            test_reweighted_acc,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
+
+        # compute test_acc reweighted by group counts in train set
+        reweighted_acc = 0
+        total_in_train_from_test_groups = 0  # sometimes we don't see every train group in test set, e.g.  when we train for less than one epoch
+        for g in group_accs:
+            c = self.train_group_counts[g]
+            reweighted_acc += group_accs[g] * c
+            total_in_train_from_test_groups += c
+        reweighted_acc /= total_in_train_from_test_groups
+
+        print(f"Group counts in training set: {self.train_group_counts}")
+        pl_module.log(
+            "test/train_reweighted_acc",
+            reweighted_acc,
+            on_step=False,
+            on_epoch=True,
+            prog_bar=False,
+        )
