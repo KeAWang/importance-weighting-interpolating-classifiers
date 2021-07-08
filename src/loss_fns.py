@@ -1,3 +1,5 @@
+import math
+
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
@@ -119,3 +121,54 @@ class LogitAdjustedLoss(nn.Module):
         return F.cross_entropy(
             adjusted_logits, target, weight=self.weight, reduction=self.reduction,
         )
+
+class PolynomialLoss(nn.Module):
+    """
+    Poly-tailed margin based losses that decay as v^{-\alpha} for \alpha > 0.
+    The theory here is that poly-tailed losses do not have max-margin behavior
+    and thus can work with importance weighting.
+
+    Poly-tailed losses are not defined at v=0 for v^{-\alpha}, and so there are
+    several variants that are supported via the [[type]] option
+    exp : f(v):= exp(-v+1) for v < 1, 1/v^\alpha otherwise
+    logit: f(v):= 1/log(2)log(1+exp(-v+1)) for v < 1, 1/v^\alpha else.
+    """
+    allowed_types = {'exp', 'logit'}
+
+    def __init__(self, type: str, alpha: float, reduction: str):
+        super().__init__()
+        self.type = type
+        assert(type in self.allowed_types)
+        assert(alpha > 0)
+        self.alpha = alpha
+        assert(reduction == "none")
+
+    def margin_fn(self, margin_vals: torch.Tensor):
+        indicator = margin_vals <= 1
+        scores = torch.zeros_like(margin_vals)
+        inv_part = torch.pow(margin_vals, -1*self.alpha)
+        if self.type == 'exp':
+            exp_part = torch.exp(-1*margin_vals+1)
+            scores[indicator] = exp_part[indicator]
+            scores[~indicator] = inv_part[~indicator]
+            return scores
+        if self.type == 'logit':
+            logit_inner = -1*margin_vals+1
+            logit_part = (torch.log(torch.exp(-1*logit_inner)+1)+logit_inner)/math.log(2)
+            scores[indicator] = logit_part[indicator]
+            scores[~indicator] = inv_part[~indicator]
+            print(margin_vals)
+            return scores
+
+    def forward(self, logits, target):
+        """
+        interfaces matches that of [[torch.nn.CrossEntropyLoss]] but treats
+        the first coordinate of logits ([:,0]) as the binary classification score
+        and discards all others
+        """
+        target_sign = 2*target-1
+        margin_scores = logits[:,0]*target_sign
+        return self.margin_fn(margin_scores)
+
+
+
