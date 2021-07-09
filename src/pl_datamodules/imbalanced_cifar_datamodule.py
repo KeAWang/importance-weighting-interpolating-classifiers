@@ -4,9 +4,10 @@ from .base_datamodule import (
     CIFAR_DEFAULT_STD,
 )
 from math import prod
+from typing import List, Optional
 from torchvision.transforms import transforms
 from ..datasets.imbalanced_cifar_datasets import ImbalancedCIFAR10Dataset
-from ..datasets.utils import ReweightedDataset, split_dataset
+from ..datasets.utils import ReweightedDataset, split_dataset, SubsetOfGroupedDataset
 import torch
 
 
@@ -17,13 +18,25 @@ class ImbalancedCIFAR10DataModule(GroupDataModule):
     """We use the class label as the group label"""
 
     def __init__(
-        self, imb_type: str, imb_factor: int, data_augmentation: bool = False, **kwargs
+        self,
+        imb_type: str,
+        imb_factor: int,
+        data_augmentation: bool = False,
+        class_subset: Optional[List[int]] = None,
+        **kwargs,
     ):
         super().__init__(**kwargs)
 
         self.imb_type = imb_type
         self.imb_factor = imb_factor
         self.data_augmentation = data_augmentation
+        self.class_subset = (
+            list(set(class_subset)) if class_subset is not None else None
+        )
+        if class_subset is not None:
+            self.num_classes = len(self.class_subset)
+            self.old_to_new_class = {y: i for i, y in enumerate(self.class_subset)}
+            self.new_to_old_class = {i: y for i, y in enumerate(self.class_subset)}
 
         # transforms_list = [
         #    transforms.ToTensor(),
@@ -76,6 +89,16 @@ class ImbalancedCIFAR10DataModule(GroupDataModule):
             transform=self.train_transform,
             download=True,
         )
+        if self.class_subset is not None:
+            chosen = [
+                i for i, y in enumerate(dataset.y_array) if int(y) in self.class_subset
+            ]
+            dataset = SubsetOfGroupedDataset(
+                dataset,
+                chosen,
+                old_to_new_class=self.old_to_new_class,
+                old_to_new_group=self.old_to_new_class,
+            )
         return dataset
 
     def prepare_base_test_dataset(self):
@@ -87,6 +110,16 @@ class ImbalancedCIFAR10DataModule(GroupDataModule):
             transform=self.eval_transform,
             download=True,
         )
+        if self.class_subset is not None:
+            chosen = [
+                i for i, y in enumerate(dataset.y_array) if int(y) in self.class_subset
+            ]
+            dataset = SubsetOfGroupedDataset(
+                dataset,
+                chosen,
+                old_to_new_class=self.old_to_new_class,
+                old_to_new_group=self.old_to_new_class,
+            )
         return dataset
 
     def setup(self, stage=None):

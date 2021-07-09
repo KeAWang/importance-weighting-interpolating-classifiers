@@ -19,6 +19,7 @@ wrapper_type: null
 imb_type: exp
 imb_factor: 100
 data_augmentation: False
+class_subset: None
 
 
 flatten_input: False

@@ -397,31 +397,75 @@ class UndersampledWithExtrasDataset(UndersampledDataset):
 
 
 class SubsetOfGroupedDataset(Dataset):
-    def __init__(self, dataset: Dataset, indices: Sequence[int]):
+    def __init__(
+        self,
+        dataset: Dataset,
+        indices: Sequence[int],
+        old_to_new_class: Optional[Dict[int, int]] = None,
+        old_to_new_group: Optional[Dict[int, int]] = None,
+    ):
         self.dataset = dataset
         self.indices = indices
 
+        if old_to_new_class is not None:
+            old_to_new_class_arr = 999 * np.ones(
+                max(old_to_new_class.keys()) + 1, dtype=np.int
+            )
+
+            old = np.array(list(old_to_new_class.keys()))
+            new = np.array(list(old_to_new_class.values()))
+            old_to_new_class_arr[old] = new
+
+            old_to_new_class = old_to_new_class_arr
+        self.old_to_new_class = old_to_new_class
+
+        if old_to_new_group is not None:
+            old_to_new_group_arr = 999 * np.ones(
+                max(old_to_new_group.keys()) + 1, dtype=np.int
+            )
+            old = np.array(list(old_to_new_group.keys()))
+            new = np.array(list(old_to_new_group.values()))
+            old_to_new_group_arr[old] = new
+
+            old_to_new_group = old_to_new_group_arr
+        self.old_to_new_group = old_to_new_group
+
     def __getitem__(self, idx):
-        return self.dataset[self.indices[idx]]
+        datapoint = self.dataset[self.indices[idx]]
+        if (
+            self.old_to_new_class is not None
+            and isinstance(datapoint, tuple)
+            and hasattr(datapoint, "_fields")
+        ):  # check if namedtuple
+            datapoint = datapoint._replace(y=int(self.old_to_new_class[datapoint.y]))
+        if (
+            self.old_to_new_group is not None
+            and isinstance(datapoint, tuple)
+            and hasattr(datapoint, "_fields")
+        ):  # check if namedtuple
+            datapoint = datapoint._replace(g=int(self.old_to_new_group[datapoint.g]))
+        return datapoint
 
     def __len__(self):
         return len(self.indices)
 
     @property
     def group_array(self):
-        return (
-            self.dataset.group_array[self.indices]
-            if hasattr(self.dataset, "group_array")
-            else None
-        )
+        if not hasattr(self.dataset, "group_array"):
+            return None
+        elif self.old_to_new_group is None:
+            return self.dataset.group_array[self.indices]
+        else:
+            return self.old_to_new_group[self.dataset.group_array[self.indices]]
 
     @property
     def y_array(self):
-        return (
-            self.dataset.y_array[self.indices]
-            if hasattr(self.dataset, "y_array")
-            else None
-        )
+        if not hasattr(self.dataset, "y_array"):
+            return None
+        elif self.old_to_new_class is None:
+            return self.dataset.y_array[self.indices]
+        else:
+            return self.old_to_new_class[self.dataset.y_array[self.indices]]
 
 
 def split_dataset(dataset: Dataset, indices_or_sections, shuffle=False, seed=None):
