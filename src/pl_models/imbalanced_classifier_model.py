@@ -25,6 +25,7 @@ class ImbalancedClassifierModel(LightningModule):
         reference_regularization: float,
         dont_update_correct_extras: bool,
         regularization_type: Optional[str],
+        flood_level: Optional[float],
         **unused_kwargs,
     ):
         super().__init__()
@@ -96,6 +97,8 @@ class ImbalancedClassifierModel(LightningModule):
         set_grad(self.architecture.linear_output, requires_grad=True)
 
         self.dont_update_correct_extras = dont_update_correct_extras
+
+        self.flood_level = flood_level
 
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
@@ -196,6 +199,8 @@ class ImbalancedClassifierModel(LightningModule):
         else:
             logits = self(x)
             loss = self.loss_fn(logits, y)
+            if self.flood_level is not None:
+                loss = (loss - self.flood_level).abs() + self.flood_level
             reweighted_loss = (loss * w).sum(0) / w.sum(0)
 
         if self.regularization_type == "logits":
