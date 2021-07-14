@@ -1,0 +1,36 @@
+# @package _global_
+
+defaults:
+    - /datamodule: imbalanced_cifar10_datamodule.yaml
+    - /model: imbalanced_classifier_model.yaml
+    - /optimizer: sgd.yaml
+    - /architecture: conv_net.yaml
+    - /loss_fn: polynomial_loss.yaml
+
+logger:
+    wandb:
+        tags: ["cifar", "binary", "polynomial"]
+
+trainer:
+    min_epochs: 1
+    max_epochs: 1000
+
+datamodule:
+    wrapper_type: null
+
+    imb_type: step
+    imb_factor: 10
+    class_subset: [0, 9]  # airplane vs truck
+
+    batch_size: 16
+    num_workers: 4
+    pin_memory: True
+    flatten_input: False
+
+
+optimizer:
+    lr: 0.1
+
+loss_fn:
+    alpha: 2
+    type: "logit"
