@@ -71,6 +71,10 @@ class ImbalancedCIFAR10DataModule(GroupDataModule):
             transforms.Normalize(CIFAR_DEFAULT_MEAN, CIFAR_DEFAULT_STD),
         ]
 
+        if self.flatten_input:
+            train_transforms.append(transforms.Lambda(lambda x: torch.flatten(x)))
+            eval_transforms.append(transforms.Lambda(lambda x: torch.flatten(x)))
+            self.dims = (prod(self.dims),)
         self.train_transform = transforms.Compose(train_transforms)
         self.eval_transform = transforms.Compose(eval_transforms)
 
