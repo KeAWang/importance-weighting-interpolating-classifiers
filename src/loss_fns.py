@@ -140,8 +140,7 @@ class PolynomialLoss(nn.Module):
         super().__init__()
         self.type = type
         assert type in self.allowed_types
-        assert alpha > 1
-        self.alpha = alpha
+        self.alpha = float(alpha)
         assert reduction == "none"
 
     def margin_fn(self, margin_vals: torch.Tensor):
@@ -157,13 +156,14 @@ class PolynomialLoss(nn.Module):
             return scores
         if self.type == "logit":
             logit_inner = -1 * margin_vals
-            logit_part = (torch.log(torch.exp(logit_inner) + 1)) / math.log(
+            logit_part = torch.nn.functional.softplus(logit_inner) / math.log(
                 1 + math.exp(-1)
             )
             scores[indicator] = logit_part[indicator]
             scores[~indicator] = inv_part[~indicator]
             return scores
         if self.type == "linear":
+            assert self.alpha > 1
             linear = -1 * margin_vals + torch.ones_like(margin_vals) * (
                 self.alpha / (self.alpha - 1)
             )
