@@ -120,6 +120,8 @@ class LogitAdjustedLoss(nn.Module):
         return F.cross_entropy(
             adjusted_logits, target, weight=self.weight, reduction=self.reduction,
         )
+
+
 class PolynomialLoss(nn.Module):
     """
     Poly-tailed margin based losses that decay as v^{-\alpha} for \alpha > 0.
@@ -131,47 +133,43 @@ class PolynomialLoss(nn.Module):
     exp : f(v):= exp(-v+1) for v < 1, 1/v^\alpha otherwise
     logit: f(v):= 1/log(2)log(1+exp(-v+1)) for v < 1, 1/v^\alpha else.
     """
-    allowed_types = {'exp', 'logit', 'linear'}
+
+    allowed_types = {"exp", "logit", "linear"}
 
     def __init__(self, type: str, alpha: float, reduction: str):
         super().__init__()
         self.type = type
-        assert(type in self.allowed_types)
-        assert(alpha > 1)
+        assert type in self.allowed_types
+        assert alpha > 1
         self.alpha = alpha
-        assert(reduction == "none")
+        assert reduction == "none"
 
     def margin_fn(self, margin_vals: torch.Tensor):
         indicator = margin_vals <= 1
         scores = torch.zeros_like(margin_vals)
-        inv_part = torch.pow(margin_vals, -1*self.alpha)
-        if self.type == 'exp':
-            exp_part = torch.exp(-1*margin_vals)
+        inv_part = torch.pow(margin_vals, -1 * self.alpha)
+        if self.type == "exp":
+            exp_part = torch.exp(-1 * margin_vals)
             scores[indicator] = exp_part[indicator]
-            scores[~indicator] = inv_part[~indicator]/math.exp(1)
+            scores[~indicator] = inv_part[~indicator] / math.exp(1)
             return scores
-        if self.type == 'logit':
-            logit_inner = -1*margin_vals
-            logit_part = (torch.log(torch.exp(logit_inner)+1))/math.log(1+math.exp(-1))
+        if self.type == "logit":
+            logit_inner = -1 * margin_vals
+            logit_part = (torch.log(torch.exp(logit_inner) + 1)) / math.log(
+                1 + math.exp(-1)
+            )
             scores[indicator] = logit_part[indicator]
             scores[~indicator] = inv_part[~indicator]
             return scores
-        if self.type == 'linear':
-            linear = -1*margin_vals+torch.ones_like(margin_vals)*(self.alpha/(self.alpha-1))
+        if self.type == "linear":
+            linear = -1 * margin_vals + torch.ones_like(margin_vals) * (
+                self.alpha / (self.alpha - 1)
+            )
             scores[indicator] = linear[indicator]
-            scores[~indicator] = inv_part[~indicator]/(self.alpha-1)
+            scores[~indicator] = inv_part[~indicator] / (self.alpha - 1)
             return scores
 
     def forward(self, logits, target):
-        """
-        interfaces matches that of [[torch.nn.CrossEntropyLoss]] but treats
-        the first coordinate of logits ([:,0]) as the binary classification score
-        and discards all others
-        """
-        target_sign = 2*target-1
-        margin_scores = (logits[:,1]-logits[:,0])*target_sign
+        target_sign = 2 * target - 1
+        margin_scores = (logits[:, 1] - logits[:, 0]) * target_sign
         return self.margin_fn(margin_scores)
-
-
-
-
