@@ -147,7 +147,9 @@ class PolynomialLoss(nn.Module):
     def margin_fn(self, margin_vals: torch.Tensor):
         indicator = margin_vals <= 1
         scores = torch.zeros_like(margin_vals)
-        inv_part = torch.pow(margin_vals, -1 * self.alpha)
+        inv_part = torch.pow(
+            margin_vals.abs(), -1 * self.alpha
+        )  # prevent nans by taking abs
         if self.type == "exp":
             exp_part = torch.exp(-1 * margin_vals)
             scores[indicator] = exp_part[indicator]
