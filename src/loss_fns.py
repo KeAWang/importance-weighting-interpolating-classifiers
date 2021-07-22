@@ -145,30 +145,28 @@ class PolynomialLoss(nn.Module):
 
     def margin_fn(self, margin_vals: torch.Tensor):
         indicator = margin_vals <= 1
-        scores = torch.zeros_like(margin_vals)
         inv_part = torch.pow(
             margin_vals.abs(), -1 * self.alpha
-        )  # prevent nans by taking abs
+        )  # prevent exponentiating negative numbers by fractional powers
         if self.type == "exp":
             exp_part = torch.exp(-1 * margin_vals)
-            scores[indicator] = exp_part[indicator]
-            scores[~indicator] = inv_part[~indicator] / math.exp(1)
+            scores = exp_part * indicator + inv_part * (~indicator)
             return scores
         if self.type == "logit":
             logit_inner = -1 * margin_vals
             logit_part = torch.nn.functional.softplus(logit_inner) / math.log(
                 1 + math.exp(-1)
             )
-            scores[indicator] = logit_part[indicator]
-            scores[~indicator] = inv_part[~indicator]
+            scores = logit_part * indicator + inv_part * (~indicator)
             return scores
         if self.type == "linear":
             assert self.alpha > 1
-            linear = -1 * margin_vals + torch.ones_like(margin_vals) * (
+            linear_part = -1 * margin_vals + torch.ones_like(margin_vals) * (
                 self.alpha / (self.alpha - 1)
             )
-            scores[indicator] = linear[indicator]
-            scores[~indicator] = inv_part[~indicator] / (self.alpha - 1)
+            scores = linear_part * indicator + inv_part * (~indicator) / (
+                self.alpha - 1
+            )
             return scores
 
     def forward(self, logits, target):
