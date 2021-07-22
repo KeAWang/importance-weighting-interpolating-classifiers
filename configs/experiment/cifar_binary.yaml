@@ -20,7 +20,7 @@ datamodule:
 
     imb_type: step
     imb_factor: 5
-    class_subset: [3, 5]  # airplane vs truck
+    class_subset: [3, 5]  # cat vs dog
 
     batch_size: 32
     num_workers: 4
