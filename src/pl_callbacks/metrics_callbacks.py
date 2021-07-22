@@ -1,6 +1,7 @@
 from collections import Counter
 from pytorch_lightning.callbacks.base import Callback
 from typing import List
+import wandb
 import torch
 
 
@@ -281,3 +282,22 @@ class GroupTestReweightedAccuracyMonitor(Callback):
             on_epoch=True,
             prog_bar=False,
         )
+
+
+class TrainLossHistogramMonitor(Callback):
+    def __init__(self):
+        self.losses = []
+
+    def reset(self):
+        self.losses.clear()
+
+    def on_train_batch_end(
+        self, trainer, pl_module, outputs: List[List[dict]], *args, **kwargs
+    ):
+        outputs = outputs[0][0]["extra"]
+        self.losses += outputs["losses"].tolist()
+
+    def on_train_epoch_end(self, trainer, pl_module, *args, **kwargs):
+        # How to ensure we log every epoch? Difference between epoch and global step?
+        trainer.logger.experiment[0].log({"train/losses": wandb.Histogram(self.losses)})
+        self.reset()

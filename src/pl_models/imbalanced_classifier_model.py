@@ -193,7 +193,7 @@ class ImbalancedClassifierModel(LightningModule):
                 w_ = w[subset]
                 logits = self(x_)
                 loss = self.loss_fn(logits, y_)
-                reweighted_loss = (loss * w_).sum(0) / (
+                reweighted_loss = (loss * w_) / (
                     w_.sum(0)
                 )  # prevent denom from blowing up when we get everything right
         else:
@@ -201,7 +201,7 @@ class ImbalancedClassifierModel(LightningModule):
             loss = self.loss_fn(logits, y)
             if self.flood_level is not None:
                 loss = (loss - self.flood_level).abs() + self.flood_level
-            reweighted_loss = (loss * w).sum(0) / w.sum(0)
+            reweighted_loss = (loss * w) / w.sum(0)
 
         if self.regularization_type == "logits":
             reference_logits = self.reference_architecture(x)
@@ -233,7 +233,8 @@ class ImbalancedClassifierModel(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
         losses, logits, preds, targets, other_data = self.step(batch, training=True)
-        loss, ce_term, reg_term = losses
+        losses, ce_term, reg_term = losses
+        loss = losses.sum(0)
 
         # log train metrics
         acc = self.train_accuracy(preds, targets)
@@ -249,6 +250,7 @@ class ImbalancedClassifierModel(LightningModule):
         # remember to always return loss from training_step, or else backpropagation will fail!
         return {
             "loss": loss,
+            "losses": losses,
             "logits": logits,
             "preds": preds,
             "targets": targets,
@@ -270,7 +272,8 @@ class ImbalancedClassifierModel(LightningModule):
 
     def validation_step(self, batch: Any, batch_idx: int):
         losses, logits, preds, targets, other_data = self.step(batch, training=False)
-        loss, ce_term, reg_term = losses
+        losses, ce_term, reg_term = losses
+        loss = losses.sum(0)
 
         num_examples = len(targets)
         num_pos_pred = (preds == 1).sum().item()
@@ -284,6 +287,7 @@ class ImbalancedClassifierModel(LightningModule):
 
         return {
             "loss": loss,
+            "losses": losses,
             "logits": logits,
             "preds": preds,
             "targets": targets,

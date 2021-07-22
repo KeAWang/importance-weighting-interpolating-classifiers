@@ -19,6 +19,9 @@ group_val_accuracy_monitor:
     _target_: src.pl_callbacks.metrics_callbacks.GroupValReweightedAccuracyMonitor
 group_test_accuracy_monitor:
     _target_: src.pl_callbacks.metrics_callbacks.GroupTestReweightedAccuracyMonitor
+train_loss_histogram_monitor:
+    _target_: src.pl_callbacks.metrics_callbacks.TrainLossHistogramMonitor
+
 
 #early_stopping:
 #    _target_: pytorch_lightning.callbacks.EarlyStopping
