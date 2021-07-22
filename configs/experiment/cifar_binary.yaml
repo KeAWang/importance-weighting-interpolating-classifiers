@@ -13,16 +13,16 @@ logger:
 
 trainer:
     min_epochs: 1
-    max_epochs: 1000
+    max_epochs: 100
 
 datamodule:
     wrapper_type: null
 
     imb_type: step
-    imb_factor: 10
-    class_subset: [0, 9]  # airplane vs truck
+    imb_factor: 5
+    class_subset: [3, 5]  # airplane vs truck
 
-    batch_size: 16
+    batch_size: 32
     num_workers: 4
     pin_memory: True
     flatten_input: False
