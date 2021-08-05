@@ -19,7 +19,7 @@ device
 ####Load the data####
 transform = transforms.Compose(
     [ToTensor(), transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))]
-)
+)  # NOTE: difference
 
 train_data = torchvision.datasets.CIFAR10(
     root="./data", train=True, download=True, transform=transform
@@ -129,14 +129,13 @@ batch_size = len(train_data.targets)
 # shuffle=True, num_workers=1)
 loaders = {
     "train": torch.utils.data.DataLoader(
-        train_data, batch_size=batch_size, shuffle=True, num_workers=1
+        train_data, batch_size=batch_size, shuffle=True, num_workers=1, pin_memory=True
     ),
     "test": torch.utils.data.DataLoader(
-        test_data, batch_size=batch_size, shuffle=False, num_workers=1
+        test_data, batch_size=batch_size, shuffle=False, num_workers=1, pin_memory=True
     ),
 }
 loaders
-
 
 ####Definition of the architechture####
 class Net(nn.Module):
@@ -159,7 +158,35 @@ class Net(nn.Module):
         return x
 
 
-cnn = Net()
+class ConvNet(nn.Sequential):
+    """Same architecture as Byrd & Lipton 2017 on CIFAR10
+    Args:
+        output_size: dimensionality of final output, usually the number of classes
+    """
+
+    def __init__(self, output_size: int = 2):
+        layers = [
+            torch.nn.Conv2d(3, 64, 3),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(64, 64, 3),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2),
+            torch.nn.Conv2d(64, 128, 3),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(128, 128, 3),
+            torch.nn.ReLU(),
+            torch.nn.Conv2d(128, 128, 3),
+            torch.nn.ReLU(),
+            torch.nn.MaxPool2d(2),
+            torch.nn.Flatten(-3, -1),
+            torch.nn.Linear(2048, 512),
+            torch.nn.ReLU(),
+            torch.nn.Linear(512, 128),
+            torch.nn.ReLU(),
+            torch.nn.Linear(128, output_size),
+        ]
+        super().__init__(*layers)
+
 
 ####Defining the loss function####
 class PolyTailLoss(torch.nn.Module):
@@ -189,8 +216,13 @@ class PolyTailLoss(torch.nn.Module):
 # Training parameters
 num_epochs = 5000
 iw_factor = 5
-# loss_func = nn.CrossEntropyLoss(reduce=None, reduction='none')
-loss_func = PolyTailLoss(alpha=2)
+device = "cuda"
+cnn = Net()
+# cnn = ConvNet()
+cnn.to(device)
+
+loss_func = nn.CrossEntropyLoss(reduce=None, reduction="none")
+# loss_func = PolyTailLoss(alpha=2)
 optimizer = optim.SGD(cnn.parameters(), lr=0.05)
 
 
@@ -203,8 +235,10 @@ def train(num_epochs, cnn, loaders):
         for i, data in enumerate(loaders["train"], 0):
             # gives batch data, normalize x when iterate train_loader
             images, labels = data
-            b_x = Variable(images)  # batch x
-            b_y = Variable(labels)  # batch y
+            b_x = images  # batch x
+            b_y = labels  # batch y
+            b_x = b_x.to(device)
+            b_y = b_y.to(device)
             idx_class_1 = b_y == 1
             weights = torch.ones_like(b_y, requires_grad=False, dtype=torch.float64)
             weights[idx_class_1] = iw_factor * torch.ones_like(weights[idx_class_1])
@@ -234,6 +268,8 @@ def train(num_epochs, cnn, loaders):
                 total_cl_1 = 0
                 for i, data in enumerate(loaders["train"], 0):
                     images, labels = data
+                    images = images.to(device)
+                    labels = labels.to(device)
                     train_output = cnn(images)
                     pred_y = torch.max(train_output, 1)[1].data.squeeze()
                     correct += (pred_y == labels).sum().item()
@@ -241,6 +277,8 @@ def train(num_epochs, cnn, loaders):
                 accuracy = correct / total
                 for i, data in enumerate(loaders["test"], 0):
                     images, labels = data
+                    images = images.to(device)
+                    labels = labels.to(device)
                     test_output = cnn(images)
                     pred_y = torch.max(test_output, 1)[1].data.squeeze()
                     # Total test accuracy
