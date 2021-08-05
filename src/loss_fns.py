@@ -156,8 +156,8 @@ class PolynomialLoss(nn.Module):
             indicator = margin_vals <= 0
             # override the inv-part with the new limit
             # should be log(1+(x/a+1)^{-a})
-            inv_part = torch.log_(
-                1.0 + torch.pow(margin_vals.abs() / self.alpha + 1.0, -1 * self.alpha)
+            inv_part = torch.log1p(
+                torch.pow(margin_vals.abs() / self.alpha + 1.0, -1 * self.alpha)
             )
             # logit part - should be log(1+exp(-x))
             logit_inner = -1 * margin_vals
