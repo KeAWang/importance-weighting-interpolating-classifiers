@@ -262,7 +262,8 @@ class ReweightedDataset(Dataset):
     ):
 
         self.dataset = dataset
-        self.weights = weights
+        self.normalization = sum(weights) / len(weights)
+        self.weights = weights / self.normalization
         self.generator = generator
 
     def __getitem__(self, idx):
