@@ -16,7 +16,7 @@ logger:
 
 trainer:
     min_epochs: 1
-    max_epochs: 50
+    max_epochs: 400
 
 datamodule:
     wrapper_type: reweighted
@@ -33,3 +33,4 @@ optimizer:
 
 architecture:
     arch: resnet50
+    pretrained: False

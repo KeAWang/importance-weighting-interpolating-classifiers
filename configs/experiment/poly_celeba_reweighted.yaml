@@ -8,7 +8,7 @@ defaults:
     - /model: imbalanced_classifier_model.yaml
     - /optimizer: sgd.yaml                    
     - /architecture: res_net.yaml                 
-    - /loss_fn: cross_entropy.yaml
+    - /loss_fn: polynomial_loss.yaml
 
 logger:
     wandb:
@@ -21,7 +21,7 @@ trainer:
 datamodule:
     wrapper_type: reweighted
     resolution: [224, 224]
-    batch_size: 64
+    batch_size: 128
     num_workers: 4
     pin_memory: True
     flatten_input: False
@@ -32,5 +32,5 @@ optimizer:
     weight_decay: 0.0001
 
 architecture:
-    arch: resnet50
-    pretrained: False
+  arch: resnet50
+  pretrained: False
