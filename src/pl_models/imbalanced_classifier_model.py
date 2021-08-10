@@ -193,15 +193,15 @@ class ImbalancedClassifierModel(LightningModule):
                 w_ = w[subset]
                 logits = self(x_)
                 loss = self.loss_fn(logits, y_)
-                reweighted_loss = (loss * w_) / (
-                    w_.sum(0)
+                reweighted_loss = (
+                    loss * w_
                 )  # prevent denom from blowing up when we get everything right
         else:
             logits = self(x)
             loss = self.loss_fn(logits, y)
             if self.flood_level is not None:
                 loss = (loss - self.flood_level).abs() + self.flood_level
-            reweighted_loss = (loss * w) / w.sum(0)
+            reweighted_loss = loss * w
 
         if self.regularization_type == "logits":
             reference_logits = self.reference_architecture(x)
@@ -234,7 +234,7 @@ class ImbalancedClassifierModel(LightningModule):
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
         losses, logits, preds, targets, other_data = self.step(batch, training=True)
         losses, ce_term, reg_term = losses
-        loss = losses.sum(0)
+        loss = losses.mean(0)
 
         # log train metrics
         acc = self.train_accuracy(preds, targets)
