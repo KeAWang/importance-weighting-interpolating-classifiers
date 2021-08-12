@@ -9,20 +9,20 @@ defaults:
 
 logger:
     wandb:
-        tags: ["cifar", "binary", "polynomial"]
+        tags: ["cifar", "binary", "reweighted", "poly"]
 
 trainer:
     min_epochs: 1
-    max_epochs: 100
+    max_epochs: 200
 
 datamodule:
-    wrapper_type: null
+    wrapper_type: reweighted
 
     imb_type: step
     imb_factor: 10
     class_subset: [3, 5]  # cat vs dog
 
-    batch_size: 32
+    batch_size: 64
     num_workers: 4
     pin_memory: True
     flatten_input: False
@@ -30,6 +30,7 @@ datamodule:
 
 optimizer:
     lr: 0.1
+    momentum: 0.9
 
 loss_fn:
     alpha: 2.

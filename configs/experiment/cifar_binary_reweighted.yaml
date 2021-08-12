@@ -5,32 +5,32 @@ defaults:
     - /model: imbalanced_classifier_model.yaml
     - /optimizer: sgd.yaml
     - /architecture: conv_net.yaml
-    - /loss_fn: polynomial_loss.yaml
+    - /loss_fn: cross_entropy.yaml
 
 logger:
     wandb:
-        tags: ["cifar", "binary", "polynomial"]
+        tags: ["cifar", "binary", "reweighted"]
 
 trainer:
     min_epochs: 1
-    max_epochs: 100
+    max_epochs: 200
+
+    checkpoint_callback: True
+
+test_on_best_ckpt: True
 
 datamodule:
-    wrapper_type: null
+    wrapper_type: reweighted
 
     imb_type: step
     imb_factor: 10
     class_subset: [3, 5]  # cat vs dog
 
-    batch_size: 32
+    batch_size: 64
     num_workers: 4
     pin_memory: True
     flatten_input: False
 
-
 optimizer:
     lr: 0.1
-
-loss_fn:
-    alpha: 2.
-    type: "logit"
+    momentum: 0.9

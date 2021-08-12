@@ -16,7 +16,10 @@ logger:
 
 trainer:
     min_epochs: 1
-    max_epochs: 50
+    max_epochs: 200
+    checkpoint_callback: True
+
+test_on_best_ckpt: True
 
 datamodule:
     wrapper_type: reweighted
@@ -29,7 +32,6 @@ datamodule:
 optimizer:
     lr: 0.0001
     momentum: 0.9
-    weight_decay: 0.0001
 
 architecture:
     arch: resnet50

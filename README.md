@@ -19,6 +19,25 @@ for weight_decay in 0.05 0.01 0.005; do
     sleep 1
 done
 ```
+
+# Tuning procedure:
+## Regular batch training
+TODO: Need to all use the same architecture. Right now binary cifiar experiments use ConvNet (no batch norm) and other image datasets use ResNet
+-All train for 200 epochs
+-All use only SGD + momentum (no weight decay)
+1. For ce loss models, fix the batch size (64), grid search the best LR
+2. For poly loss model, use the same batch size as reweighted model (64), grid search the best LR
+## Large batch training
+3. For ce loss model, fix the batch size (256), grid search the best LR
+4. For poly loss model, use the same batch size (256), grid search the best LR
+
+Do the above for waterbirds, celeba, binary cifar. (All binary classification)
+This gives a total of LR_grid x 2 x 2 x 3 = LR_grid x 12 models to train.
+
+
+
+
+
 # IGNORE EVERYTHING BELOW THIS (unless you want to learn the general template of the repo)
 
 <div align="center">
