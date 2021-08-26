@@ -35,3 +35,6 @@ optimizer:
 loss_fn:
     alpha: 2.
     type: "logit"
+
+model:
+    reweight_loss: True

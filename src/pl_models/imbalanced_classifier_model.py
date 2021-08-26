@@ -20,13 +20,10 @@ class ImbalancedClassifierModel(LightningModule):
         loss_fn: DictConfig,
         freeze_features: bool,
         ckpt_path: Optional[str],
-        reference_ckpt_path: Optional[str],
         output_size: int,
-        reference_regularization: float,
-        dont_update_correct_extras: bool,
-        regularization_type: Optional[str],
-        flood_level: Optional[float],
         weight_exponent: Optional[float],
+        dro: bool,
+        reweight_loss: bool,
         **unused_kwargs,
     ):
         super().__init__()
@@ -61,26 +58,6 @@ class ImbalancedClassifierModel(LightningModule):
         self.architecture.linear_output.bias = torch.nn.Parameter(torch.Tensor(new_out))
         self.architecture.linear_output.reset_parameters()
 
-        self.reference_regularization = reference_regularization
-        self.regularization_type = regularization_type
-        if regularization_type is None:
-            self.reference_architecture = None
-        else:
-            self.reference_architecture = deepcopy(self.architecture)
-            set_grad(self.reference_architecture, requires_grad=False)
-            if reference_ckpt_path is None and ckpt_path is not None:
-                reference_ckpt_path = ckpt_path
-            if reference_ckpt_path is not None:
-                print(f"Loading from reference checkpoint path {reference_ckpt_path}")
-                reference_ckpt = torch.load(
-                    reference_ckpt_path, map_location=torch.device("cpu")
-                )
-                self.reference_architecture.load_state_dict(
-                    submodule_state_dict(reference_ckpt["state_dict"], "architecture")
-                )
-            else:
-                raise RuntimeError("No checkpoints or reference checkpoints given")
-
         if ckpt_path is not None:
             print(f"Loading from checkpoint path {ckpt_path}")
             ckpt = torch.load(ckpt_path, map_location=torch.device("cpu"))
@@ -97,11 +74,11 @@ class ImbalancedClassifierModel(LightningModule):
             set_grad(self.architecture, requires_grad=True)
         set_grad(self.architecture.linear_output, requires_grad=True)
 
-        self.dont_update_correct_extras = dont_update_correct_extras
-
-        self.flood_level = flood_level
-
         self.weight_exponent = weight_exponent
+
+        self.dro = dro
+
+        self.reweight_loss = reweight_loss
 
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
@@ -123,8 +100,6 @@ class ImbalancedClassifierModel(LightningModule):
             if self.freeze_features:
                 self.architecture.eval()
                 self.architecture.linear_output.train()
-            if self.reference_architecture is not None:
-                self.reference_architecture.eval()
         else:
             super().train(False)
 
@@ -175,58 +150,32 @@ class ImbalancedClassifierModel(LightningModule):
             w = torch.ones_like(y)
             other_data = {}
 
+        targets = y
+
         if self.weight_exponent is not None:
             w = w ** self.weight_exponent
 
+        # In case of batch norm, need to be careful with .eval() and .train()
         with torch.no_grad():
             self.eval()
             preds = torch.argmax(self(x), dim=-1)
+
+            if self.dro:
+                eval_losses = self.loss_fn(self(x), y)
+                worst_group_idx = get_worst_group_idx(eval_losses, w)
+                w = w[worst_group_idx]
+                x = x[worst_group_idx]
+                y = y[worst_group_idx]
+
             self.train(training)
 
-        # TODO: do we need to change the normalization?
-        if training and self.dont_update_correct_extras:
-            extra = batch.extra
-            correct = preds == y
-            # We need to prevent the model from even "seeing" the correct extra examples
-            # since otherwise the batch norm statistics will change
-            subset = ~(extra & correct)
-            if not torch.any(subset):
-                reweighted_loss = torch.tensor(0.0, device=x.device, requires_grad=True)
-                logits = None
-            else:
-                x_ = x[subset]
-                y_ = y[subset]
-                w_ = w[subset]
-                logits = self(x_)
-                loss = self.loss_fn(logits, y_)
-                reweighted_loss = (
-                    loss * w_
-                )  # prevent denom from blowing up when we get everything right
-        else:
-            logits = self(x)
-            loss = self.loss_fn(logits, y)
-            if self.flood_level is not None:
-                loss = (loss - self.flood_level).abs() + self.flood_level
-            reweighted_loss = loss * w
+        logits = self(x)
+        losses = self.loss_fn(logits, y)
 
-        if self.regularization_type == "logits":
-            reference_logits = self.reference_architecture(x)
-            kl = (
-                -(reference_logits.softmax(dim=-1) * logits.log_softmax(dim=-1))
-                .sum(-1)
-                .mean(0)
-            )
-            reg_term = self.reference_regularization * kl
-        elif self.regularization_type == "weights":
-            learned_params, ref_params = match_flattened_params(
-                self.architecture, self.reference_architecture
-            )
-            l2 = (learned_params - ref_params).pow(2).sum(0)
-            reg_term = self.reference_regularization * l2
-        elif self.regularization_type is None:
-            reg_term = 0
-        total_loss = reweighted_loss + reg_term
-        return (total_loss, reweighted_loss, reg_term), logits, preds, y, other_data
+        if self.reweight_loss:
+            losses = losses * w
+
+        return losses, logits, preds, targets, other_data
 
     # See https://pytorch-lightning.readthedocs.io/en/latest/common/lightning_module.html#hooks for hooks order
     # Newest hooks are in https://github.com/PyTorchLightning/pytorch-lightning/pull/7713
@@ -239,17 +188,11 @@ class ImbalancedClassifierModel(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
         losses, logits, preds, targets, other_data = self.step(batch, training=True)
-        losses, ce_term, reg_term = losses
         loss = losses.mean(0)
-        ce_term = ce_term.mean(0)
 
         # log train metrics
         acc = self.train_accuracy(preds, targets)
         self.log("train/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
-        self.log("train/ce_term", ce_term, on_step=False, on_epoch=True, prog_bar=False)
-        self.log(
-            "train/reg_term", reg_term, on_step=False, on_epoch=True, prog_bar=False
-        )
         self.log("train/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
 
         # we can return here dict with any tensors
@@ -279,9 +222,7 @@ class ImbalancedClassifierModel(LightningModule):
 
     def validation_step(self, batch: Any, batch_idx: int):
         losses, logits, preds, targets, other_data = self.step(batch, training=False)
-        losses, ce_term, reg_term = losses
         loss = losses.mean(0)
-        ce_term = ce_term.mean(0)
 
         num_examples = len(targets)
         num_pos_pred = (preds == 1).sum().item()
@@ -289,8 +230,6 @@ class ImbalancedClassifierModel(LightningModule):
         # log val metrics
         acc = self.val_accuracy(preds, targets)
         self.log("val/loss", loss, on_step=False, on_epoch=True, prog_bar=False)
-        self.log("val/ce_term", ce_term, on_step=False, on_epoch=True, prog_bar=False)
-        self.log("val/reg_term", reg_term, on_step=False, on_epoch=True, prog_bar=False)
         self.log("val/acc", acc, on_step=False, on_epoch=True, prog_bar=True)
 
         return {
@@ -319,7 +258,6 @@ class ImbalancedClassifierModel(LightningModule):
 
     def test_step(self, batch: Any, batch_idx: int):
         losses, logits, preds, targets, other_data = self.step(batch, training=False)
-        losses, _, _ = losses
         loss = losses.mean(0)
 
         return {
@@ -378,3 +316,81 @@ def trainable_named_parameters(module: torch.nn.Module):
     for n, p in module.named_parameters():
         if p.requires_grad:
             yield n, p
+
+
+def groupby_mean(
+    values: torch.Tensor, labels: torch.LongTensor
+) -> Tuple[torch.Tensor, torch.LongTensor]:
+    """Group-wise average for (sparse) grouped tensors
+    Modified from https://discuss.pytorch.org/t/groupby-aggregate-mean-in-pytorch/45335/9
+
+    Args:
+        values (torch.Tensor): values to average (# samples, latent dimension)
+        labels (torch.LongTensor): labels for embedding parameters (# samples,)
+
+    Returns:
+        result (torch.Tensor): (# unique labels, latent dimension)
+        new_labels (torch.LongTensor): (# unique labels,)
+
+    Examples:
+        >>> samples = torch.Tensor([
+                             [0.15, 0.15, 0.15],    #-> group / class 1
+                             [0.2, 0.2, 0.2],    #-> group / class 5
+                             [0.4, 0.4, 0.4],    #-> group / class 5
+                             [0.0, 0.0, 0.0]     #-> group / class 0
+                      ])
+        >>> labels = torch.LongTensor([1, 5, 5, 0])
+        >>> result, new_labels = groupby_mean(samples, labels)
+
+        >>> result
+        tensor([[0.0000, 0.0000, 0.0000],
+            [0.1500, 0.1500, 0.1500],
+            [0.3000, 0.3000, 0.3000]])
+
+        >>> new_labels
+        tensor([0, 1, 5])
+    """
+    one_dim = values.ndim == 1
+    if one_dim:
+        values = values.unsqueeze(-1)
+    assert values.ndim == 2
+    assert labels.ndim == 1
+    uniques = labels.unique().tolist()
+    labels = labels.tolist()
+
+    key_val = {key: val for key, val in zip(uniques, range(len(uniques)))}
+    val_key = {val: key for key, val in zip(uniques, range(len(uniques)))}
+
+    labels = torch.tensor(
+        list(map(key_val.get, labels)), dtype=torch.long, device=values.device
+    )
+
+    labels = labels.view(labels.size(0), 1).expand(-1, values.size(1))
+
+    unique_labels, labels_count = labels.unique(dim=0, return_counts=True)
+    result = torch.zeros_like(unique_labels, dtype=values.dtype).scatter_add_(
+        0, labels, values
+    )
+    result = result / labels_count.float().unsqueeze(1)
+    new_labels = torch.tensor(
+        list(map(val_key.get, unique_labels[:, 0].tolist())),
+        dtype=torch.long,
+        device=values.device,
+    )
+    if one_dim:
+        result = result.squeeze(-1)
+    return result, new_labels
+
+
+def get_worst_group_idx(losses: torch.Tensor, weights: torch.Tensor) -> torch.Tensor:
+    assert weights.ndim == 1
+    unique_w = weights.unique()
+    w_onehot = weights.unsqueeze(-1) == unique_w
+    labels = w_onehot.nonzero()[:, -1]
+
+    assert losses.ndim == 1
+    group_losses, new_labels = groupby_mean(losses, labels)
+    worst_group = new_labels[group_losses.argmax()]
+
+    worst_group_idx = (labels == worst_group).nonzero().squeeze(-1)
+    return worst_group_idx

@@ -33,3 +33,6 @@ architecture:
 
 loss_fn:
     alpha: 2.
+
+model:
+    reweight_loss: True

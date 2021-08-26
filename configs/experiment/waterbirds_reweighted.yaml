@@ -33,3 +33,6 @@ optimizer:
 architecture:
     arch: resnet50
     pretrained: False
+
+model:
+    reweight_loss: True
