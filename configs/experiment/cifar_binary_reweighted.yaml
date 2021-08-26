@@ -32,5 +32,5 @@ datamodule:
     flatten_input: False
 
 optimizer:
-    lr: 0.1
+    lr: 0.01
     momentum: 0.9
