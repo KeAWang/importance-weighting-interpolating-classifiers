@@ -21,6 +21,7 @@ class CelebADataModule(GroupDataModule):
         augment_data: bool,
         target_name: str,
         confounder_names: List[str],
+        train_frac: int,
         **kwargs,
     ):
         resolution = tuple(resolution)
@@ -30,6 +31,7 @@ class CelebADataModule(GroupDataModule):
         self.augment_data = augment_data
         self.target_name = target_name
         self.confounder_names = confounder_names
+        self.train_frac = train_frac
 
         train_transforms_list = get_transforms_list(
             resolution, train=True, augment_data=augment_data
@@ -72,7 +74,9 @@ class CelebADataModule(GroupDataModule):
             eval_transform=self.eval_transform,
         )
 
-        dataset_splits = full_dataset.get_splits(["train", "val", "test"])
+        dataset_splits = full_dataset.get_splits(
+            ["train", "val", "test"], train_frac=self.train_frac
+        )
         train_dataset = dataset_splits["train"]
         val_dataset = dataset_splits["val"]
         test_dataset = dataset_splits["test"]
