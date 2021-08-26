@@ -26,6 +26,7 @@ class ImbalancedClassifierModel(LightningModule):
         dont_update_correct_extras: bool,
         regularization_type: Optional[str],
         flood_level: Optional[float],
+        weight_exponent: Optional[float],
         **unused_kwargs,
     ):
         super().__init__()
@@ -100,6 +101,8 @@ class ImbalancedClassifierModel(LightningModule):
 
         self.flood_level = flood_level
 
+        self.weight_exponent = weight_exponent
+
         # use separate metric instance for train, val and test step
         # to ensure a proper reduction over the epoch
 
@@ -171,6 +174,9 @@ class ImbalancedClassifierModel(LightningModule):
             x, y = batch
             w = torch.ones_like(y)
             other_data = {}
+
+        if self.weight_exponent is not None:
+            w = w ** self.weight_exponent
 
         with torch.no_grad():
             self.eval()
