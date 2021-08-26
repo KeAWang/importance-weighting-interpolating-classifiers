@@ -241,6 +241,7 @@ class ImbalancedClassifierModel(LightningModule):
         losses, logits, preds, targets, other_data = self.step(batch, training=True)
         losses, ce_term, reg_term = losses
         loss = losses.mean(0)
+        ce_term = ce_term.mean(0)
 
         # log train metrics
         acc = self.train_accuracy(preds, targets)
@@ -279,7 +280,8 @@ class ImbalancedClassifierModel(LightningModule):
     def validation_step(self, batch: Any, batch_idx: int):
         losses, logits, preds, targets, other_data = self.step(batch, training=False)
         losses, ce_term, reg_term = losses
-        loss = losses.sum(0)
+        loss = losses.mean(0)
+        ce_term = ce_term.mean(0)
 
         num_examples = len(targets)
         num_pos_pred = (preds == 1).sum().item()
@@ -317,7 +319,8 @@ class ImbalancedClassifierModel(LightningModule):
 
     def test_step(self, batch: Any, batch_idx: int):
         losses, logits, preds, targets, other_data = self.step(batch, training=False)
-        loss, ce_term, reg_term = losses
+        losses, _, _ = losses
+        loss = losses.mean(0)
 
         return {
             "loss": loss,
