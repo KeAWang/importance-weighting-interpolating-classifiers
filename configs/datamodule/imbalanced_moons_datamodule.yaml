@@ -11,4 +11,4 @@ data_dir: ${data_dir}  # data_dir is specified in config.yaml
 batch_size: 16
 num_workers: 0
 pin_memory: False
-
+train_sampler: null

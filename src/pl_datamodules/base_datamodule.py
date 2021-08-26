@@ -25,6 +25,7 @@ class BaseDataModule(LightningDataModule):
         batch_size: int,
         num_workers: int,
         pin_memory: bool,
+        train_sampler: Optional[str] = None,
         data_dir: str = "data/",
     ):
         super().__init__()
@@ -38,6 +39,8 @@ class BaseDataModule(LightningDataModule):
         self.train_dataset: Optional[Dataset] = None
         self.val_dataset: Optional[Dataset] = None
 
+        self.train_sampler = train_sampler
+
     def prepare_data(self):
         """Download data if needed. This method is called only from a single GPU.
         Do not use it to assign state (self.x = y)."""
@@ -48,13 +51,38 @@ class BaseDataModule(LightningDataModule):
         raise NotImplementedError
 
     def train_dataloader(self):
-        return DataLoader(
-            dataset=self.train_dataset,
-            batch_size=self.batch_size,
-            num_workers=self.num_workers,
-            pin_memory=self.pin_memory,
-            shuffle=True,
-        )
+        train_sampler = self.train_sampler
+        if train_sampler == "weighted":
+            sampler = torch.utils.data.WeightedRandomSampler(
+                weights=self.train_dataset.weights.tolist(),
+                replacement=True,
+                num_samples=len(self.train_dataset),
+                generator=None,
+            )
+
+            self.train_dataset.weights = torch.ones_like(
+                self.train_dataset.weights
+            )  # Reset all weight to be equal since we changed how we're sampling
+
+            dataloader = DataLoader(
+                dataset=self.train_dataset,
+                sampler=sampler,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                pin_memory=self.pin_memory,
+                shuffle=False,
+            )
+        elif train_sampler is None:
+            dataloader = DataLoader(
+                dataset=self.train_dataset,
+                batch_size=self.batch_size,
+                num_workers=self.num_workers,
+                pin_memory=self.pin_memory,
+                shuffle=True,
+            )
+        else:
+            raise NotImplementedError(f"{train_sampler} not implemented")
+        return dataloader
 
     def val_dataloader(self):
         return DataLoader(

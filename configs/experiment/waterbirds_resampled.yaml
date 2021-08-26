@@ -19,12 +19,13 @@ trainer:
     max_epochs: 50
 
 datamodule:
-    wrapper_type: resampled
+    wrapper_type: reweighted
     resolution: [224, 224]
     batch_size: 64
     num_workers: 4
     pin_memory: True
     flatten_input: False
+    train_sampler: weighted
 
 optimizer:
     lr: 0.001

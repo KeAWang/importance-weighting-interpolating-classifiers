@@ -19,7 +19,7 @@ trainer:
     gradient_clip_val: 1.0
 
 datamodule:
-    wrapper_type: resampled
+    wrapper_type: reweighted
 
     tokenizer:
         pretrained_model_name_or_path: ${architecture.model_name}
@@ -28,6 +28,7 @@ datamodule:
     num_workers: 4
     pin_memory: True
     flatten_input: False
+    train_sampler: weighted
 
 optimizer:
     lr: 0.00001
