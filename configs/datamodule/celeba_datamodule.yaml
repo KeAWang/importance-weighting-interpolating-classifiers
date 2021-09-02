@@ -15,4 +15,5 @@ batch_size: null
 num_workers: 0
 pin_memory: True
 train_sampler: null
-train_frac: 1.0
+#train_frac: 1.0
+train_frac: 0.05
