@@ -153,15 +153,10 @@ class PolynomialLoss(nn.Module):
             scores = exp_part * indicator + inv_part * (~indicator)
             return scores
         if self.type == "logit":
-            indicator = margin_vals <= 0
-            # override the inv-part with the new limit
-            # should be log(1+(x/a+1)^{-a})
-            inv_part = torch.log1p(
-                torch.pow(margin_vals.abs() / self.alpha + 1.0, -1 * self.alpha)
-            )
-            # logit part - should be log(1+exp(-x))
+            indicator = margin_vals <= 1
+            inv_part = torch.pow(margin_vals.abs(),-1*self.alpha)
             logit_inner = -1 * margin_vals
-            logit_part = torch.nn.functional.softplus(logit_inner)
+            logit_part = torch.nn.functional.softplus(logit_inner)/(math.log(1+math.exp(-1)))
             scores = logit_part * indicator + inv_part * (~indicator)
             return scores
         if self.type == "linear":
