@@ -32,10 +32,6 @@ optimizer:
     lr: 0.01
     momentum: 0.9
 
-loss_fn:
-    alpha: 2.
-    type: "logit"
-
 model:
     dro: True
     adv_probs_lr: 0.01

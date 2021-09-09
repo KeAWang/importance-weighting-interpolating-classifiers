@@ -30,7 +30,3 @@ datamodule:
 
 optimizer:
     lr: 0.1
-
-loss_fn:
-    alpha: 2.
-    type: "logit"

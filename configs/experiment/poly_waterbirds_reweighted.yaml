@@ -31,8 +31,5 @@ architecture:
     arch: resnet50
     pretrained: False
 
-loss_fn:
-    alpha: 2.
-
 model:
     reweight_loss: True

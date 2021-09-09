@@ -31,9 +31,6 @@ architecture:
     arch: resnet50
     pretrained: False
 
-loss_fn:
-    alpha: 2.
-
 model:
     dro: True
     adv_probs_lr: 0.01
