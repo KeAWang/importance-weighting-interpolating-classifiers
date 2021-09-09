@@ -23,6 +23,7 @@ class ImbalancedClassifierModel(LightningModule):
         output_size: int,
         weight_exponent: Optional[float],
         dro: bool,
+        adv_probs_lr: Optional[float],
         reweight_loss: bool,
         **unused_kwargs,
     ):
@@ -77,6 +78,12 @@ class ImbalancedClassifierModel(LightningModule):
         self.weight_exponent = weight_exponent
 
         self.dro = dro
+        self.adv_probs: Optional[
+            torch.Tensor
+        ] = None  # will be populated later if dro is True
+        if dro:
+            assert adv_probs_lr is not None
+        self.adv_probs_lr = adv_probs_lr
 
         self.reweight_loss = reweight_loss
 
@@ -141,7 +148,7 @@ class ImbalancedClassifierModel(LightningModule):
         if isinstance(batch, tuple) and hasattr(
             batch, "_fields"
         ):  # check if namedtuple
-            x, y, w = batch.x, batch.y, batch.w
+            x, y, w, g = batch.x, batch.y, batch.w, batch.g
             other_data = batch._asdict()
             other_data.pop("x")
             other_data.pop("y")
@@ -152,6 +159,16 @@ class ImbalancedClassifierModel(LightningModule):
 
         targets = y
 
+        if self.dro:
+            if self.adv_probs is None:
+                # Hacky way of getting adv_probs without needing to know number of
+                # groups at __init__ time since datamodule is not initialiezd yet at
+                # __init__
+                num_groups = len(self.trainer.datamodule.train_g_counter.keys())
+                adv_probs = torch.ones(num_groups, device=x.device, dtype=x.dtype)
+                del self.adv_probs
+                self.register_buffer("adv_probs", adv_probs)
+
         if self.weight_exponent is not None:
             w = w ** self.weight_exponent
 
@@ -160,17 +177,23 @@ class ImbalancedClassifierModel(LightningModule):
             self.eval()
             preds = torch.argmax(self(x), dim=-1)
 
-            if self.dro:
-                eval_losses = self.loss_fn(self(x), y)
-                worst_group_idx = get_worst_group_idx(eval_losses, w)
-                w = w[worst_group_idx]
-                x = x[worst_group_idx]
-                y = y[worst_group_idx]
-
             self.train(training)
 
         logits = self(x)
         losses = self.loss_fn(logits, y)
+
+        if self.dro:
+            assert g.ndim == 1
+            with torch.no_grad():
+                self.eval()
+                group_losses = compute_avg_group_losses(losses, g, len(self.adv_probs))
+                adv_probs = self.adv_probs
+                adv_probs = adv_probs * torch.exp(self.adv_probs_lr * group_losses)
+                adv_probs = adv_probs / adv_probs.sum(0)
+                self.adv_probs = adv_probs
+
+                self.train(training)
+            losses = losses * self.adv_probs[g]
 
         if self.reweight_loss:
             losses = losses * w
@@ -394,3 +417,19 @@ def get_worst_group_idx(losses: torch.Tensor, weights: torch.Tensor) -> torch.Te
 
     worst_group_idx = (labels == worst_group).nonzero().squeeze(-1)
     return worst_group_idx
+
+
+def compute_avg_group_losses(
+    losses: torch.Tensor, group_idx: torch.Tensor, num_groups: int
+):
+    # compute observed counts and mean loss for each group
+    assert losses.ndim == 1
+    assert group_idx.ndim == 1
+    group_map = (
+        torch.arange(num_groups, device=losses.device, dtype=losses.dtype).unsqueeze(1)
+        == group_idx
+    ).float()
+    group_count = group_map.sum(1)
+    group_denom = group_count + (group_count == 0).float()  # prevent division by zero
+    group_loss = (group_map @ losses) / group_denom
+    return group_loss

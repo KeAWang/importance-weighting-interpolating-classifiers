@@ -34,4 +34,5 @@ optimizer:
 
 model:
     dro: True
+    adv_probs_lr: 0.01
     reweight_loss: False
