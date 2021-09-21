@@ -1,0 +1,39 @@
+# @package _global_
+
+defaults:
+    - /datamodule: celeba_datamodule.yaml
+    - /model: imbalanced_classifier_model.yaml
+    - /optimizer: sgd.yaml                    
+    - /architecture: res_net.yaml                 
+    - /loss_fn: null
+
+logger:
+    wandb:
+        tags: ["reweighted", "early-stopped"]
+
+trainer:
+    min_epochs: 1
+    max_epochs: 50
+    checkpoint_callback: True
+    limit_val_batches: 0.02
+
+test_on_best_ckpt: True
+
+datamodule:
+    wrapper_type: reweighted
+    resolution: [224, 224]
+    batch_size: 64
+    num_workers: 4
+    pin_memory: True
+    flatten_input: False
+
+optimizer:
+    lr: 0.0004
+    momentum: 0.9
+
+architecture:
+    arch: resnet50
+    pretrained: True
+
+model:
+    reweight_loss: True
