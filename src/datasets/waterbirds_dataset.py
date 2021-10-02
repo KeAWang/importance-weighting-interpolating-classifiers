@@ -40,15 +40,16 @@ class ConfounderDataset(Dataset):
 
         return GroupedLabeledDatapoint(x=x, y=y, g=g)
 
-    def get_splits(self, splits, train_frac=1.0):
+    def get_splits(self, splits, train_frac=1.0, seed=0):
         subsets = {}
+        rng = np.random.default_rng(seed=seed)
         for split in splits:
             assert split in ("train", "val", "test"), split + " is not a valid split"
             mask = self.split_array == self.split_dict[split]
             indices = np.where(mask)[0]
             if train_frac < 1 and split == "train":
                 num_to_retain = int(np.round(float(len(indices)) * train_frac))
-                indices = np.sort(np.random.permutation(indices)[:num_to_retain])
+                indices = rng.choice(indices, num_to_retain, replace=False)
             subsets[split] = Subset(self, indices)
             subsets[split].group_array = self.group_array[indices]
             subsets[split].y_array = self.y_array[indices]

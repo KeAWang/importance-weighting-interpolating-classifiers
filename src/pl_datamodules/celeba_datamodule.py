@@ -75,11 +75,15 @@ class CelebADataModule(GroupDataModule):
         )
 
         dataset_splits = full_dataset.get_splits(
-            ["train", "val", "test"], train_frac=self.train_frac
+            ["train", "val", "test"], train_frac=self.train_frac, seed=123
         )
         train_dataset = dataset_splits["train"]
         val_dataset = dataset_splits["val"]
         test_dataset = dataset_splits["test"]
+
+        test_dataset = subsample_groups(
+            test_dataset, [180, 180, 180, 180], seed=1234
+        )  # subsample so that test set is even across groups
 
         self.train_y_counter, self.train_g_counter, _ = self.compute_weights(
             train_dataset
@@ -133,3 +137,24 @@ def get_transforms_list(resolution: Tuple[int, int], train: bool, augment_data: 
             transforms.Normalize(IMAGENET_DEFAULT_MEAN, IMAGENET_DEFAULT_STD),
         ]
     return transforms_list
+
+
+def subsample_groups(dataset, new_group_sizes: List[int], seed):
+    from torch.utils.data import Subset
+    import numpy as np
+
+    group_array = dataset.group_array
+    indices_kept = []
+    rng = np.random.default_rng(seed=seed)
+    assert len(new_group_sizes) == len(np.unique(group_array))
+    for g in np.unique(group_array):
+        g = int(g)
+        g_indices = np.where(group_array == g)[0]
+        g_indices_kept = rng.choice(g_indices, new_group_sizes[g], replace=False)
+        indices_kept.append(g_indices_kept)
+
+    indices = np.concatenate(indices_kept)
+    new_dataset = Subset(dataset, indices)
+    new_dataset.group_array = group_array[indices]
+    new_dataset.y_array = dataset.y_array[indices]
+    return new_dataset
