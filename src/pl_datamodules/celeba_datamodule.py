@@ -75,7 +75,7 @@ class CelebADataModule(GroupDataModule):
         )
 
         dataset_splits = full_dataset.get_splits(
-            ["train", "val", "test"], train_frac=self.train_frac, seed=123
+            ["train", "val", "test"], train_frac=self.train_frac, seed=0
         )
         train_dataset = dataset_splits["train"]
         val_dataset = dataset_splits["val"]
