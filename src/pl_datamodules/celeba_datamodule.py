@@ -22,6 +22,7 @@ class CelebADataModule(GroupDataModule):
         target_name: str,
         confounder_names: List[str],
         train_frac: int,
+        train_weight_exponent: float = 1.0,
         **kwargs,
     ):
         resolution = tuple(resolution)
@@ -32,6 +33,7 @@ class CelebADataModule(GroupDataModule):
         self.target_name = target_name
         self.confounder_names = confounder_names
         self.train_frac = train_frac
+        self.train_weight_exponent = train_weight_exponent
 
         train_transforms_list = get_transforms_list(
             resolution, train=True, augment_data=augment_data

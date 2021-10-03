@@ -259,10 +259,14 @@ class ReweightedDataset(Dataset):
         dataset: Dataset,
         weights: Sequence[float],
         generator: Optional[Generator] = None,
+        weight_exponent: float = 1.0,
     ):
+        weights = weights ** weight_exponent
 
+        self.weight_exponent = weight_exponent
         self.dataset = dataset
         self.normalization = sum(weights) / len(weights)
+
         self.weights = weights / self.normalization
         self.generator = generator
 

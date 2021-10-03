@@ -38,7 +38,9 @@ def make_datamodule(
                 train_dataset = self.train_dataset
                 _, _, train_weights = self.compute_weights(train_dataset)
                 reweighted_train_dataset = ReweightedDataset(
-                    train_dataset, weights=train_weights
+                    train_dataset,
+                    weights=train_weights,
+                    weight_exponent=self.train_weight_exponent,
                 )
                 self.train_dataset = reweighted_train_dataset
                 # Keep val and test dataset the same as before

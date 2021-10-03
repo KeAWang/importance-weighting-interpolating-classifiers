@@ -1,8 +1,6 @@
 _target_: src.pl_models.imbalanced_classifier_model.ImbalancedClassifierModel
 freeze_features: False
 ckpt_path: null
-weight_exponent: null
-weight_multiplier: null
 dro: False
 adv_probs_lr: None
 reweight_loss: False

@@ -20,6 +20,7 @@ imb_type: exp
 imb_factor: 100
 data_augmentation: False
 class_subset: None
+train_weight_exponent: 1.0
 
 
 flatten_input: False

@@ -21,8 +21,6 @@ class ImbalancedClassifierModel(LightningModule):
         freeze_features: bool,
         ckpt_path: Optional[str],
         output_size: int,
-        weight_exponent: Optional[float],
-        weight_multiplier: Optional[float],
         dro: bool,
         adv_probs_lr: Optional[float],
         reweight_loss: bool,
@@ -75,9 +73,6 @@ class ImbalancedClassifierModel(LightningModule):
         else:
             set_grad(self.architecture, requires_grad=True)
         set_grad(self.architecture.linear_output, requires_grad=True)
-
-        self.weight_exponent = weight_exponent
-        self.weight_multiplier = weight_multiplier if weight_multiplier is not None else 1.0
 
         self.dro = dro
         self.adv_probs: Optional[
@@ -171,9 +166,6 @@ class ImbalancedClassifierModel(LightningModule):
                 del self.adv_probs
                 self.register_buffer("adv_probs", adv_probs)
 
-        if self.weight_exponent is not None:
-            w = w ** self.weight_exponent
-
         # In case of batch norm, need to be careful with .eval() and .train()
         with torch.no_grad():
             self.eval()
@@ -198,15 +190,6 @@ class ImbalancedClassifierModel(LightningModule):
             losses = losses * self.adv_probs[g]
 
         if self.reweight_loss:
-            if self.weight_multiplier != 1.0:
-                w_min = torch.min(w)
-                w = w / w_min
-                max_ratio = torch.max(w)
-                w = (
-                    (w - 1) * (self.weight_multiplier * max_ratio - 1) / (max_ratio - 1)
-                    + 1
-                ) * w_min
-
             losses = losses * w
 
         return losses, logits, preds, targets, other_data

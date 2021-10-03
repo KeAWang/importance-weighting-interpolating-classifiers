@@ -23,6 +23,7 @@ class ImbalancedCIFAR10DataModule(GroupDataModule):
         imb_factor: int,
         data_augmentation: bool = False,
         class_subset: Optional[List[int]] = None,
+        train_weight_exponent: float = 1.0,
         **kwargs,
     ):
         super().__init__(**kwargs)
@@ -33,6 +34,7 @@ class ImbalancedCIFAR10DataModule(GroupDataModule):
         self.class_subset = (
             list(set(class_subset)) if class_subset is not None else None
         )
+        self.train_weight_exponent = train_weight_exponent
         if class_subset is not None:
             self.num_classes = len(self.class_subset)
             self.old_to_new_class = {y: i for i, y in enumerate(self.class_subset)}
