@@ -1,0 +1,4 @@
+_target_: src.loss_fns.VSLoss
+tau: 1.5
+gamma: 0.2
+num_per_class: [1, 1]

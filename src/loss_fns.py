@@ -174,3 +174,35 @@ class PolynomialLoss(nn.Module):
         margin_scores = (logits[:, 1] - logits[:, 0]) * target_sign
         loss_values = self.margin_fn(margin_scores)
         return loss_values
+
+
+class VSLoss(nn.Module):
+    def __init__(
+        self,
+        tau: float,
+        gamma: float,
+        num_per_class: List[int],
+        reduction: str = "none",
+    ):
+        """ Note this only works for class imbalance and not group imbalance for now"""
+        super().__init__()
+        num_per_class = torch.tensor(num_per_class, dtype=torch.long)
+        pi = num_per_class / num_per_class.sum(0)  # prior probabilities
+        additive_param = tau * torch.log(pi)  # iota
+
+        n_max = torch.max(num_per_class).item()
+        multiplicative_param = (num_per_class / n_max) ** gamma  # delta
+
+        self.tau = tau
+        self.gamma = gamma
+        self.num_per_class = num_per_class
+        self.reduction = reduction
+
+        self.register_buffer("additive_param", additive_param)
+        self.register_buffer("multiplicative_param", multiplicative_param)
+
+    def forward(self, logits, target):
+        assert logits.ndim == 2
+        new_logits = self.multiplicative_param * logits + self.additive_param
+        loss = F.cross_entropy(new_logits, target, reduction=self.reduction)
+        return loss
