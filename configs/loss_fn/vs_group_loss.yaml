@@ -1,4 +1,3 @@
 _target_: src.loss_fns.VSGroupLoss
-tau: 1.5
-gamma: 0.2
+gamma: 0.3
 num_per_group: [1446, 1308, 468, 33]  # celebA

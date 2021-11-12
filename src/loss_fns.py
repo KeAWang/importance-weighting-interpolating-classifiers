@@ -210,21 +210,15 @@ class VSLoss(nn.Module):
 
 class VSGroupLoss(nn.Module):
     def __init__(
-        self,
-        tau: float,
-        gamma: float,
-        num_per_group: List[int],
-        reduction: str = "none",
+        self, gamma: float, num_per_group: List[int], reduction: str = "none",
     ):
         super().__init__()
         num_per_group = torch.tensor(num_per_group, dtype=torch.long)
-        pi = num_per_group / num_per_group.sum(0)  # prior probabilities
-        additive_param = tau * torch.log(pi)  # iota
 
         n_max = torch.max(num_per_group).item()
+        additive_param = -1 / ((num_per_group / n_max) ** gamma)  # iota
         multiplicative_param = (num_per_group / n_max) ** gamma  # delta
 
-        self.tau = tau
         self.gamma = gamma
         self.num_per_group = num_per_group
         self.reduction = reduction
