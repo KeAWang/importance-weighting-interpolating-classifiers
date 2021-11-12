@@ -206,3 +206,36 @@ class VSLoss(nn.Module):
         new_logits = self.multiplicative_param * logits + self.additive_param
         loss = F.cross_entropy(new_logits, target, reduction=self.reduction)
         return loss
+
+
+class VSGroupLoss(nn.Module):
+    def __init__(
+        self,
+        tau: float,
+        gamma: float,
+        num_per_group: List[int],
+        reduction: str = "none",
+    ):
+        super().__init__()
+        num_per_group = torch.tensor(num_per_group, dtype=torch.long)
+        pi = num_per_group / num_per_group.sum(0)  # prior probabilities
+        additive_param = tau * torch.log(pi)  # iota
+
+        n_max = torch.max(num_per_group).item()
+        multiplicative_param = (num_per_group / n_max) ** gamma  # delta
+
+        self.tau = tau
+        self.gamma = gamma
+        self.num_per_group = num_per_group
+        self.reduction = reduction
+
+        self.register_buffer("additive_param", additive_param)
+        self.register_buffer("multiplicative_param", multiplicative_param)
+
+    def forward(self, logits, target, groups):
+        assert logits.ndim == 2
+        new_logits = (
+            self.multiplicative_param[groups] * logits + self.additive_param[groups]
+        )
+        loss = F.cross_entropy(new_logits, target, reduction=self.reduction)
+        return loss
