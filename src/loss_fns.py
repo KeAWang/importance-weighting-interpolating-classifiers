@@ -209,6 +209,8 @@ class VSLoss(nn.Module):
 
 
 class VSGroupLoss(nn.Module):
+    _takes_groups = True
+
     def __init__(
         self, gamma: float, num_per_group: List[int], reduction: str = "none",
     ):

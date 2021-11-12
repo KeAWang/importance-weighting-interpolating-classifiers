@@ -174,7 +174,10 @@ class ImbalancedClassifierModel(LightningModule):
             self.train(training)
 
         logits = self(x)
-        losses = self.loss_fn(logits, y)
+        if hasattr(self.loss_fn, "_takes_groups"):
+            losses = self.loss_fn(logits, y, g)
+        else:
+            losses = self.loss_fn(logits, y)
 
         if self.dro:
             assert g.ndim == 1
