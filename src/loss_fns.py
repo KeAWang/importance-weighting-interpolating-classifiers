@@ -43,11 +43,10 @@ class LDAMLoss(nn.Module):
 
     def __init__(
         self,
-        weight: Optional[torch.Tensor],
         num_per_class: List[int],
         max_margin: float,
         inv_temperature: float,
-        reduction: str,
+        reduction: str = "none",
     ):
         super(LDAMLoss, self).__init__()
         assert max_margin > 0
@@ -67,8 +66,7 @@ class LDAMLoss(nn.Module):
         margins = torch.as_tensor(margins, dtype=torch.get_default_dtype())
         # margins is 1D Tensor of shape (k,) for k classes
         self.register_buffer("margins", margins)
-        self.register_buffer("weight", weight)
-        assert self.margins.shape == self.weight.shape
+        self.reduction = reduction
 
     def forward(self, logits, target):
         # follows the interface of torch.nn.CrossEntropyLoss.forward
@@ -79,10 +77,7 @@ class LDAMLoss(nn.Module):
         mask = torch.nn.functional.one_hot(target, num_classes=logits.shape[-1])
         new_logits = logits - self.margins.reshape(1, -1) * mask
         return F.cross_entropy(
-            self.inv_temperature * new_logits,
-            target,
-            weight=self.weight,
-            reduction=self.reduction,
+            self.inv_temperature * new_logits, target, reduction=self.reduction,
         )
 
 
