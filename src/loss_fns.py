@@ -230,8 +230,8 @@ class VSGroupLoss(nn.Module):
 
     def forward(self, logits, target, groups):
         assert logits.ndim == 2
-        new_logits = (
-            self.multiplicative_param[groups] * logits + self.additive_param[groups]
-        )
+        new_logits = self.multiplicative_param[groups].reshape(
+            -1, 1
+        ) * logits + self.additive_param[groups].reshape(-1, 1)
         loss = F.cross_entropy(new_logits, target, reduction=self.reduction)
         return loss
