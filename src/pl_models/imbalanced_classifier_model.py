@@ -179,21 +179,22 @@ class ImbalancedClassifierModel(LightningModule):
         else:
             losses = self.loss_fn(logits, y)
 
-        if self.dro:
+        if self.reweight_loss:
+            losses = losses * w
+
+        elif self.dro:
             assert g.ndim == 1
+            group_losses = compute_avg_group_losses(losses, g, len(self.adv_probs))
+            losses = group_losses  # losses is no longer loss of each example, but instead average loss of each group
+
             with torch.no_grad():
                 self.eval()
-                group_losses = compute_avg_group_losses(losses, g, len(self.adv_probs))
                 adv_probs = self.adv_probs
                 adv_probs = adv_probs * torch.exp(self.adv_probs_lr * group_losses)
                 adv_probs = adv_probs / adv_probs.sum(0)
                 self.adv_probs = adv_probs
 
                 self.train(training)
-            losses = losses * self.adv_probs[g]
-
-        if self.reweight_loss:
-            losses = losses * w
 
         return losses, logits, preds, targets, other_data
 
@@ -208,7 +209,10 @@ class ImbalancedClassifierModel(LightningModule):
 
     def training_step(self, batch: Any, batch_idx: int) -> Dict[str, torch.Tensor]:
         losses, logits, preds, targets, other_data = self.step(batch, training=True)
-        loss = losses.mean(0)
+        if self.dro:
+            loss = (losses * self.adv_probs).sum(0)
+        else:
+            loss = losses.mean(0)
 
         # log train metrics
         acc = self.train_accuracy(preds, targets)
@@ -242,7 +246,10 @@ class ImbalancedClassifierModel(LightningModule):
 
     def validation_step(self, batch: Any, batch_idx: int):
         losses, logits, preds, targets, other_data = self.step(batch, training=False)
-        loss = losses.mean(0)
+        if self.dro:
+            loss = (losses * self.adv_probs).sum(0)
+        else:
+            loss = losses.mean(0)
 
         num_examples = len(targets)
         num_pos_pred = (preds == 1).sum().item()
@@ -278,7 +285,10 @@ class ImbalancedClassifierModel(LightningModule):
 
     def test_step(self, batch: Any, batch_idx: int):
         losses, logits, preds, targets, other_data = self.step(batch, training=False)
-        loss = losses.mean(0)
+        if self.dro:
+            loss = (losses * self.adv_probs).sum(0)
+        else:
+            loss = losses.mean(0)
 
         return {
             "loss": loss,
