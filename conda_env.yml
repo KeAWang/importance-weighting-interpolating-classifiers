@@ -1,4 +1,4 @@
-name: is
+name: iw
 channels:
   - pytorch
   - conda-forge
@@ -283,4 +283,3 @@ dependencies:
     - werkzeug==1.0.1
     - wrapt==1.12.1
     - yarl==1.6.3
-prefix: /home/alex/miniconda3/envs/is
