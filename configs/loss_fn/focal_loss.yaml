@@ -1,3 +1,0 @@
-_target_: src.loss_fns.FocalLoss
-gamma: 0.
-weight: null

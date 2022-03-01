@@ -1,4 +1,0 @@
-_target_: transformers.AutoTokenizer.from_pretrained
-pretrained_model_name_or_path: null
-cache_dir: ${oc.env:HUGGINGFACE_TOKENIZER_CACHE_DIR}
-use_fast: False

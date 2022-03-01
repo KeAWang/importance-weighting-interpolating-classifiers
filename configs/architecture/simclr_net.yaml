@@ -1,5 +1,0 @@
-_target_: src.architectures.simclr.resnet_wider.SimCLRNet
-input_size: [3, 224, 224]
-output_size: null
-width_mult: 1
-ckpt_dir: ${oc.env:SIMCLR_CKPT_DIR}
