@@ -1,5 +1,6 @@
 # Is Importance Weighting Incompatible with Interpolating Classifiers?  (ICLR 2022)
 
+![Polynomially-tailed loss correcting for distribution shift](media/two-gaussians.jpg)
 ```
 @inproceedings{
 wang2022is,
