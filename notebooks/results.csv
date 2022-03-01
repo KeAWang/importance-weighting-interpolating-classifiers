@@ -1,0 +1,201 @@
+name,loss,dataset,seed,acc,query
+worldly-dust-1701,Cross Entropy,ImbalancedCIFAR10DataModule,9,0.6380000114440918,No IW
+wandering-smoke-1700,Cross Entropy,ImbalancedCIFAR10DataModule,8,0.6274999380111694,No IW
+distinctive-waterfall-1699,Cross Entropy,ImbalancedCIFAR10DataModule,6,0.6034999489784241,No IW
+sparkling-cosmos-1697,Cross Entropy,ImbalancedCIFAR10DataModule,5,0.5524999499320984,No IW
+devout-sun-1698,Cross Entropy,ImbalancedCIFAR10DataModule,7,0.6284999251365662,No IW
+fallen-butterfly-1667,Poly-tailed Loss,ImbalancedCIFAR10DataModule,5,0.5504999756813049,No IW
+crisp-energy-1664,Poly-tailed Loss,ImbalancedCIFAR10DataModule,9,0.5649999976158142,No IW
+dauntless-energy-1662,Poly-tailed Loss,ImbalancedCIFAR10DataModule,7,0.5864999294281006,No IW
+major-music-1669,Poly-tailed Loss,ImbalancedCIFAR10DataModule,8,0.5679999589920044,No IW
+polished-forest-1663,Poly-tailed Loss,ImbalancedCIFAR10DataModule,6,0.5469998717308044,No IW
+earnest-salad-1634,Cross Entropy,ImbalancedCIFAR10DataModule,4,0.5774999856948853,No IW
+rural-universe-1632,Poly-tailed Loss,ImbalancedCIFAR10DataModule,4,0.5684999227523804,No IW
+devoted-elevator-1624,Poly-tailed Loss,ImbalancedCIFAR10DataModule,3,0.5564999580383301,No IW
+brisk-glade-1623,Cross Entropy,ImbalancedCIFAR10DataModule,3,0.6054999828338623,No IW
+effortless-morning-1611,Cross Entropy,ImbalancedCIFAR10DataModule,1,0.6029999852180481,No IW
+logical-lake-1609,Poly-tailed Loss,ImbalancedCIFAR10DataModule,0,0.5614999532699585,No IW
+vital-night-1610,Poly-tailed Loss,ImbalancedCIFAR10DataModule,1,0.5564999580383301,No IW
+devout-donkey-1607,Cross Entropy,ImbalancedCIFAR10DataModule,2,0.622499942779541,No IW
+blooming-shadow-1608,Cross Entropy,ImbalancedCIFAR10DataModule,0,0.5874999761581421,No IW
+super-spaceship-1605,Poly-tailed Loss,ImbalancedCIFAR10DataModule,2,0.578499972820282,No IW
+cosmic-meadow-1281,Poly-tailed Loss,CelebADataModule,9,0.7958332896232605,No IW
+wobbly-sunset-1280,Cross Entropy,CelebADataModule,9,0.8027777671813965,No IW
+divine-forest-1277,Poly-tailed Loss,CelebADataModule,8,0.8013889193534851,No IW
+solar-grass-1276,Cross Entropy,CelebADataModule,8,0.8111110925674438,No IW
+dulcet-planet-1270,Cross Entropy,CelebADataModule,7,0.798611044883728,No IW
+cerulean-eon-1269,Poly-tailed Loss,CelebADataModule,7,0.7916666865348816,No IW
+jolly-wind-1264,Poly-tailed Loss,CelebADataModule,5,0.793055534362793,No IW
+fancy-leaf-1262,Poly-tailed Loss,CelebADataModule,6,0.7777777314186096,No IW
+comic-bush-1261,Cross Entropy,CelebADataModule,5,0.8152776956558228,No IW
+laced-music-1258,Cross Entropy,CelebADataModule,6,0.8041666150093079,No IW
+stoic-sunset-1251,Cross Entropy,CelebADataModule,4,0.7805555462837219,No IW
+treasured-valley-1250,Poly-tailed Loss,CelebADataModule,4,0.762499988079071,No IW
+dry-salad-1246,Poly-tailed Loss,CelebADataModule,3,0.7944444417953491,No IW
+balmy-dream-1245,Cross Entropy,CelebADataModule,3,0.793055534362793,No IW
+stellar-pine-1241,Cross Entropy,CelebADataModule,2,0.7888888120651245,No IW
+stilted-butterfly-1239,Poly-tailed Loss,CelebADataModule,2,0.7777777314186096,No IW
+azure-wildflower-1237,Poly-tailed Loss,CelebADataModule,1,0.7749999761581421,No IW
+magic-smoke-1233,Cross Entropy,CelebADataModule,0,0.7805555462837219,No IW
+northern-grass-1229,Cross Entropy,CelebADataModule,1,0.786111056804657,No IW
+proud-wildflower-1232,Poly-tailed Loss,CelebADataModule,0,0.7805555462837219,No IW
+feasible-pyramid-1706,Cross Entropy,ImbalancedCIFAR10DataModule,6,0.5604999661445618,IW
+devout-violet-1705,Cross Entropy,ImbalancedCIFAR10DataModule,8,0.575499951839447,IW
+decent-frog-1704,Cross Entropy,ImbalancedCIFAR10DataModule,7,0.574999988079071,IW
+gentle-sky-1703,Cross Entropy,ImbalancedCIFAR10DataModule,9,0.5860000252723694,IW
+treasured-field-1702,Cross Entropy,ImbalancedCIFAR10DataModule,5,0.5894999504089355,IW
+expert-wood-1672,Poly-tailed Loss,ImbalancedCIFAR10DataModule,9,0.6149999499320984,IW
+playful-fire-1671,Poly-tailed Loss,ImbalancedCIFAR10DataModule,8,0.5929999947547913,IW
+devoted-water-1668,Poly-tailed Loss,ImbalancedCIFAR10DataModule,6,0.5949999094009399,IW
+unique-wave-1665,Poly-tailed Loss,ImbalancedCIFAR10DataModule,5,0.6104999780654907,IW
+stoic-glitter-1666,Poly-tailed Loss,ImbalancedCIFAR10DataModule,7,0.6069999933242798,IW
+ethereal-violet-1642,Poly-tailed Loss,ImbalancedCIFAR10DataModule,1,0.607499897480011,IW
+summer-grass-1640,Poly-tailed Loss,ImbalancedCIFAR10DataModule,0,0.6129999756813049,IW
+ethereal-sponge-1633,Cross Entropy,ImbalancedCIFAR10DataModule,4,0.5569999814033508,IW
+devoted-hill-1630,Poly-tailed Loss,ImbalancedCIFAR10DataModule,4,0.5844999551773071,IW
+pleasant-fire-1626,Poly-tailed Loss,ImbalancedCIFAR10DataModule,3,0.6029999852180481,IW
+ethereal-plasma-1625,Cross Entropy,ImbalancedCIFAR10DataModule,3,0.575999915599823,IW
+rosy-sound-1619,Cross Entropy,ImbalancedCIFAR10DataModule,1,0.578000009059906,IW
+celestial-morning-1617,Poly-tailed Loss,ImbalancedCIFAR10DataModule,2,0.6154999732971191,IW
+wandering-mountain-1612,Cross Entropy,ImbalancedCIFAR10DataModule,0,0.5814999341964722,IW
+divine-voice-1606,Cross Entropy,ImbalancedCIFAR10DataModule,2,0.5989999771118164,IW
+feasible-lion-1283,Cross Entropy,CelebADataModule,9,0.805555522441864,IW
+honest-pond-1282,Poly-tailed Loss,CelebADataModule,9,0.7874999642372131,IW
+scarlet-voice-1279,Poly-tailed Loss,CelebADataModule,8,0.8208332657814026,IW
+iconic-puddle-1278,Cross Entropy,CelebADataModule,8,0.8083332777023315,IW
+leafy-field-1274,Poly-tailed Loss,CelebADataModule,7,0.8305555582046509,IW
+rural-feather-1272,Cross Entropy,CelebADataModule,7,0.8013889193534851,IW
+daily-butterfly-1268,Cross Entropy,CelebADataModule,6,0.8041666150093079,IW
+zany-frost-1266,Poly-tailed Loss,CelebADataModule,6,0.8083332777023315,IW
+efficient-wildflower-1265,Cross Entropy,CelebADataModule,5,0.7902777194976807,IW
+chocolate-elevator-1263,Poly-tailed Loss,CelebADataModule,5,0.8249999284744263,IW
+legendary-flower-1253,Poly-tailed Loss,CelebADataModule,4,0.8013889193534851,IW
+tough-jazz-1254,Poly-tailed Loss,CelebADataModule,3,0.8138888478279114,IW
+comfy-valley-1249,Cross Entropy,CelebADataModule,4,0.793055534362793,IW
+generous-frog-1247,Cross Entropy,CelebADataModule,3,0.7805554270744324,IW
+still-galaxy-1242,Poly-tailed Loss,CelebADataModule,2,0.7694443464279175,IW
+spring-pine-1240,Cross Entropy,CelebADataModule,2,0.7791666388511658,IW
+chocolate-frost-1235,Poly-tailed Loss,CelebADataModule,1,0.8027777671813965,IW
+jolly-armadillo-1234,Cross Entropy,CelebADataModule,1,0.7847221493721008,IW
+youthful-universe-1231,Poly-tailed Loss,CelebADataModule,0,0.8125,IW
+zesty-flower-1230,Cross Entropy,CelebADataModule,0,0.7791666388511658,IW
+worthy-terrain-1711,Cross Entropy,ImbalancedCIFAR10DataModule,9,0.6520000100135803,IW-ES
+still-snowflake-1710,Cross Entropy,ImbalancedCIFAR10DataModule,8,0.6299999952316284,IW-ES
+winter-sponge-1709,Cross Entropy,ImbalancedCIFAR10DataModule,7,0.6179999709129333,IW-ES
+jumping-darkness-1708,Cross Entropy,ImbalancedCIFAR10DataModule,6,0.6065000295639038,IW-ES
+golden-sunset-1707,Cross Entropy,ImbalancedCIFAR10DataModule,5,0.6494999527931213,IW-ES
+volcanic-vortex-1676,Poly-tailed Loss,ImbalancedCIFAR10DataModule,9,0.6494999527931213,IW-ES
+honest-feather-1675,Poly-tailed Loss,ImbalancedCIFAR10DataModule,8,0.6429999470710754,IW-ES
+dulcet-fire-1674,Poly-tailed Loss,ImbalancedCIFAR10DataModule,7,0.6264999508857727,IW-ES
+chocolate-bee-1673,Poly-tailed Loss,ImbalancedCIFAR10DataModule,5,0.6389999985694885,IW-ES
+golden-morning-1670,Poly-tailed Loss,ImbalancedCIFAR10DataModule,6,0.6329999566078186,IW-ES
+celestial-terrain-1644,Cross Entropy,ImbalancedCIFAR10DataModule,1,0.6204999685287476,IW-ES
+peach-waterfall-1643,Cross Entropy,ImbalancedCIFAR10DataModule,0,0.6335000395774841,IW-ES
+dandy-moon-1641,Poly-tailed Loss,ImbalancedCIFAR10DataModule,1,0.6274999380111694,IW-ES
+treasured-field-1631,Poly-tailed Loss,ImbalancedCIFAR10DataModule,4,0.6114999651908875,IW-ES
+valiant-cloud-1629,Cross Entropy,ImbalancedCIFAR10DataModule,4,0.5969999432563782,IW-ES
+soft-spaceship-1628,Poly-tailed Loss,ImbalancedCIFAR10DataModule,3,0.6219999194145203,IW-ES
+worthy-deluge-1627,Cross Entropy,ImbalancedCIFAR10DataModule,3,0.593999981880188,IW-ES
+different-plant-1622,Poly-tailed Loss,ImbalancedCIFAR10DataModule,2,0.6635000109672546,IW-ES
+breezy-disco-1621,Cross Entropy,ImbalancedCIFAR10DataModule,2,0.650999903678894,IW-ES
+swept-violet-1616,Poly-tailed Loss,ImbalancedCIFAR10DataModule,0,0.6269999742507935,IW-ES
+distinctive-galaxy-1327,Poly-tailed Loss,CelebADataModule,8,0.8958333134651184,IW-ES
+dulcet-salad-1286,Poly-tailed Loss,CelebADataModule,9,0.8472221493721008,IW-ES
+jolly-glade-1285,Cross Entropy,CelebADataModule,9,0.8444443941116333,IW-ES
+apricot-cloud-1284,Cross Entropy,CelebADataModule,8,0.8180554509162903,IW-ES
+lucky-resonance-1275,Poly-tailed Loss,CelebADataModule,7,0.8402777910232544,IW-ES
+deep-yogurt-1273,Cross Entropy,CelebADataModule,7,0.8444443941116333,IW-ES
+atomic-thunder-1271,Poly-tailed Loss,CelebADataModule,6,0.8249999284744263,IW-ES
+ethereal-terrain-1267,Cross Entropy,CelebADataModule,6,0.8930554986000061,IW-ES
+revived-plant-1260,Cross Entropy,CelebADataModule,5,0.8249999284744263,IW-ES
+trim-wildflower-1259,Poly-tailed Loss,CelebADataModule,5,0.8111110925674438,IW-ES
+smart-glitter-1257,Poly-tailed Loss,CelebADataModule,2,0.8527777194976807,IW-ES
+fanciful-water-1256,Poly-tailed Loss,CelebADataModule,4,0.7972221970558167,IW-ES
+hardy-plasma-1255,Cross Entropy,CelebADataModule,4,0.8527777194976807,IW-ES
+fiery-sky-1252,Poly-tailed Loss,CelebADataModule,3,0.8583332896232605,IW-ES
+confused-dew-1248,Cross Entropy,CelebADataModule,3,0.8347221612930298,IW-ES
+driven-pine-1243,Cross Entropy,CelebADataModule,2,0.8694444298744202,IW-ES
+vivid-lion-1238,Poly-tailed Loss,CelebADataModule,1,0.8486109972000122,IW-ES
+restful-brook-1236,Cross Entropy,CelebADataModule,1,0.8388888239860535,IW-ES
+young-silence-1228,Poly-tailed Loss,CelebADataModule,0,0.819444477558136,IW-ES
+jolly-darkness-1227,Cross Entropy,CelebADataModule,0,0.8708332777023315,IW-ES
+classic-leaf-1694,Cross Entropy,ImbalancedCIFAR10DataModule,9,0.578499972820282,IW-Exp
+drawn-voice-1693,Poly-tailed Loss,ImbalancedCIFAR10DataModule,9,0.6299999952316284,IW-Exp
+logical-planet-1690,Cross Entropy,ImbalancedCIFAR10DataModule,8,0.575999915599823,IW-Exp
+misunderstood-water-1689,Poly-tailed Loss,ImbalancedCIFAR10DataModule,8,0.6474999785423279,IW-Exp
+sandy-wood-1686,Cross Entropy,ImbalancedCIFAR10DataModule,7,0.5639999508857727,IW-Exp
+distinctive-feather-1685,Poly-tailed Loss,ImbalancedCIFAR10DataModule,7,0.612500011920929,IW-Exp
+giddy-paper-1684,Cross Entropy,ImbalancedCIFAR10DataModule,6,0.5649999380111694,IW-Exp
+fine-wave-1681,Poly-tailed Loss,ImbalancedCIFAR10DataModule,6,0.6184999942779541,IW-Exp
+jumping-durian-1678,Cross Entropy,ImbalancedCIFAR10DataModule,5,0.6150000095367432,IW-Exp
+restful-water-1677,Poly-tailed Loss,ImbalancedCIFAR10DataModule,5,0.6549999713897705,IW-Exp
+astral-waterfall-1603,Poly-tailed Loss,CelebADataModule,9,0.8444443941116333,IW-Exp
+zany-thunder-1598,Poly-tailed Loss,CelebADataModule,8,0.8236110806465149,IW-Exp
+legendary-microwave-1597,Poly-tailed Loss,CelebADataModule,7,0.8375000357627869,IW-Exp
+zesty-tree-1595,Poly-tailed Loss,CelebADataModule,6,0.8263888359069824,IW-Exp
+faithful-planet-1593,Poly-tailed Loss,CelebADataModule,5,0.8152777552604675,IW-Exp
+rosy-leaf-1591,Poly-tailed Loss,CelebADataModule,4,0.8444443941116333,IW-Exp
+dainty-thunder-1590,Poly-tailed Loss,CelebADataModule,3,0.8166666030883789,IW-Exp
+desert-moon-1586,Poly-tailed Loss,CelebADataModule,2,0.8194443583488464,IW-Exp
+usual-energy-1582,Poly-tailed Loss,CelebADataModule,0,0.8138888478279114,IW-Exp
+gallant-pyramid-1576,Poly-tailed Loss,CelebADataModule,1,0.8263888359069824,IW-Exp
+rural-planet-1572,Cross Entropy,CelebADataModule,9,0.7833333611488342,IW-Exp
+misty-brook-1567,Cross Entropy,CelebADataModule,7,0.7902777194976807,IW-Exp
+true-pyramid-1571,Cross Entropy,CelebADataModule,4,0.8027777671813965,IW-Exp
+bumbling-dawn-1569,Cross Entropy,CelebADataModule,2,0.7819444537162781,IW-Exp
+neat-water-1568,Cross Entropy,CelebADataModule,6,0.7819443345069885,IW-Exp
+atomic-morning-1570,Cross Entropy,CelebADataModule,3,0.7638888955116272,IW-Exp
+soft-sponge-1566,Cross Entropy,CelebADataModule,0,0.805555522441864,IW-Exp
+fanciful-morning-1565,Cross Entropy,CelebADataModule,5,0.7847221493721008,IW-Exp
+restful-darkness-1564,Cross Entropy,CelebADataModule,1,0.7819443345069885,IW-Exp
+soft-water-1563,Cross Entropy,CelebADataModule,8,0.7916666269302368,IW-Exp
+different-gorge-1557,Cross Entropy,ImbalancedCIFAR10DataModule,4,0.5389999747276306,IW-Exp
+deft-dream-1555,Poly-tailed Loss,ImbalancedCIFAR10DataModule,4,0.5974999666213989,IW-Exp
+zany-terrain-1551,Cross Entropy,ImbalancedCIFAR10DataModule,3,0.5549999475479126,IW-Exp
+snowy-sun-1547,Poly-tailed Loss,ImbalancedCIFAR10DataModule,3,0.6344999074935913,IW-Exp
+silvery-eon-1541,Cross Entropy,ImbalancedCIFAR10DataModule,2,0.5869999527931213,IW-Exp
+smart-violet-1539,Poly-tailed Loss,ImbalancedCIFAR10DataModule,2,0.6469999551773071,IW-Exp
+easy-shadow-1534,Poly-tailed Loss,ImbalancedCIFAR10DataModule,1,0.6315000057220459,IW-Exp
+fresh-butterfly-1527,Cross Entropy,ImbalancedCIFAR10DataModule,1,0.5849999785423279,IW-Exp
+confused-water-1525,Cross Entropy,ImbalancedCIFAR10DataModule,0,0.575999915599823,IW-Exp
+polar-monkey-1524,Poly-tailed Loss,ImbalancedCIFAR10DataModule,0,0.6284999847412109,IW-Exp
+daily-forest-1696,Cross Entropy,ImbalancedCIFAR10DataModule,9,0.6060000061988831,IW-Exp-ES
+denim-glitter-1695,Poly-tailed Loss,ImbalancedCIFAR10DataModule,9,0.6445000171661377,IW-Exp-ES
+restful-silence-1691,Poly-tailed Loss,ImbalancedCIFAR10DataModule,8,0.6269999742507935,IW-Exp-ES
+fast-snowflake-1692,Cross Entropy,ImbalancedCIFAR10DataModule,8,0.6195000410079956,IW-Exp-ES
+rose-haze-1688,Cross Entropy,ImbalancedCIFAR10DataModule,7,0.5879999995231628,IW-Exp-ES
+fluent-sky-1687,Poly-tailed Loss,ImbalancedCIFAR10DataModule,7,0.6179999709129333,IW-Exp-ES
+comic-frog-1682,Poly-tailed Loss,ImbalancedCIFAR10DataModule,6,0.6239999532699585,IW-Exp-ES
+frosty-frost-1683,Cross Entropy,ImbalancedCIFAR10DataModule,6,0.6204999685287476,IW-Exp-ES
+scarlet-lion-1680,Cross Entropy,ImbalancedCIFAR10DataModule,5,0.653999924659729,IW-Exp-ES
+decent-galaxy-1679,Poly-tailed Loss,ImbalancedCIFAR10DataModule,5,0.6635000109672546,IW-Exp-ES
+dashing-morning-1602,Poly-tailed Loss,CelebADataModule,9,0.831944465637207,IW-Exp-ES
+quiet-dragon-1600,Poly-tailed Loss,CelebADataModule,8,0.8486109972000122,IW-Exp-ES
+valiant-breeze-1599,Poly-tailed Loss,CelebADataModule,7,0.8847221732139587,IW-Exp-ES
+floral-sunset-1596,Poly-tailed Loss,CelebADataModule,6,0.8652777671813965,IW-Exp-ES
+copper-wildflower-1594,Poly-tailed Loss,CelebADataModule,5,0.8624999523162842,IW-Exp-ES
+pleasant-oath-1592,Poly-tailed Loss,CelebADataModule,4,0.8902777433395386,IW-Exp-ES
+valiant-thunder-1589,Poly-tailed Loss,CelebADataModule,3,0.8611111044883728,IW-Exp-ES
+graceful-bird-1588,Poly-tailed Loss,CelebADataModule,2,0.8930554986000061,IW-Exp-ES
+morning-sky-1587,Poly-tailed Loss,CelebADataModule,1,0.8361111283302307,IW-Exp-ES
+fiery-grass-1578,Cross Entropy,CelebADataModule,5,0.8736111521720886,IW-Exp-ES
+azure-terrain-1583,Cross Entropy,CelebADataModule,9,0.8166666030883789,IW-Exp-ES
+floral-dragon-1585,Poly-tailed Loss,CelebADataModule,0,0.8208332657814026,IW-Exp-ES
+easy-bush-1579,Cross Entropy,CelebADataModule,4,0.8347222208976746,IW-Exp-ES
+stellar-yogurt-1580,Cross Entropy,CelebADataModule,8,0.8666666746139526,IW-Exp-ES
+comic-donkey-1581,Cross Entropy,CelebADataModule,6,0.831944465637207,IW-Exp-ES
+avid-serenity-1577,Cross Entropy,CelebADataModule,3,0.8500000238418579,IW-Exp-ES
+grateful-wind-1584,Cross Entropy,CelebADataModule,7,0.8666666746139526,IW-Exp-ES
+wobbly-breeze-1573,Cross Entropy,CelebADataModule,1,0.8347222208976746,IW-Exp-ES
+easy-plant-1575,Cross Entropy,CelebADataModule,0,0.8750000596046448,IW-Exp-ES
+firm-pyramid-1574,Cross Entropy,CelebADataModule,2,0.8638888597488403,IW-Exp-ES
+worldly-snowflake-1561,Poly-tailed Loss,ImbalancedCIFAR10DataModule,4,0.6009998917579651,IW-Exp-ES
+iconic-brook-1559,Cross Entropy,ImbalancedCIFAR10DataModule,4,0.5704999566078186,IW-Exp-ES
+fluent-plasma-1553,Cross Entropy,ImbalancedCIFAR10DataModule,3,0.5849999785423279,IW-Exp-ES
+royal-sponge-1550,Poly-tailed Loss,ImbalancedCIFAR10DataModule,3,0.6334999799728394,IW-Exp-ES
+treasured-moon-1543,Poly-tailed Loss,ImbalancedCIFAR10DataModule,2,0.6394999623298645,IW-Exp-ES
+revived-durian-1545,Cross Entropy,ImbalancedCIFAR10DataModule,2,0.625,IW-Exp-ES
+earthy-glitter-1537,Cross Entropy,ImbalancedCIFAR10DataModule,1,0.6184999942779541,IW-Exp-ES
+vivid-lion-1529,Poly-tailed Loss,ImbalancedCIFAR10DataModule,0,0.6299999952316284,IW-Exp-ES
+peachy-plasma-1532,Poly-tailed Loss,ImbalancedCIFAR10DataModule,1,0.6654999852180481,IW-Exp-ES
+lemon-sun-1531,Cross Entropy,ImbalancedCIFAR10DataModule,0,0.6324999332427979,IW-Exp-ES
