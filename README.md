@@ -1,5 +1,16 @@
 # Is Importance Weighting Incompatible with Interpolating Classifiers?  (ICLR 2022)
 
+```
+@inproceedings{
+wang2022is,
+title={Is Importance Weighting Incompatible with Interpolating Classifiers?},
+author={Ke Alexander Wang and Niladri Shekhar Chatterji and Saminul Haque and Tatsunori Hashimoto},
+booktitle={International Conference on Learning Representations},
+year={2022},
+url={https://openreview.net/forum?id=uqBOne3LUKy}
+}
+```
+
 - [Code](https://github.com/KeAWang/importance-weighting-interpolating-classifiers)
 - [ICLR 2022 OpenReview](https://openreview.net/forum?id=uqBOne3LUKy)
 - [arXiv](https://arxiv.org/abs/2112.12986)
@@ -109,15 +120,3 @@ python run.py +experiment=celeba_dro loss_fn=cross_entropy optimizer.lr=0.001 tr
 python run.py +experiment=celeba_dro loss_fn=vs_group_loss loss_fn.gamma=0.4 loss_fn.num_per_group="[1446,1308,468,33]" optimizer.lr=0.001 trainer.max_epochs=200 model.adv_probs_lr=0.05
 ```
 
-## BibTeX
-
-```
-@inproceedings{
-wang2022is,
-title={Is Importance Weighting Incompatible with Interpolating Classifiers?},
-author={Ke Alexander Wang and Niladri Shekhar Chatterji and Saminul Haque and Tatsunori Hashimoto},
-booktitle={International Conference on Learning Representations},
-year={2022},
-url={https://openreview.net/forum?id=uqBOne3LUKy}
-}
-```
