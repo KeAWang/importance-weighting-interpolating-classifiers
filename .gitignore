@@ -145,5 +145,5 @@ logs
 data/
 logs/
 wandb/
-notebooks/*.pdf
-notebooks/*.png
+#notebooks/*.pdf
+#notebooks/*.png
