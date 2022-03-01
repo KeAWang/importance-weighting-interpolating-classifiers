@@ -1,5 +1,10 @@
 # Is Importance Weighting Incompatible with Interpolating Classifiers?  (ICLR 2022)
 
+- [Code](https://github.com/KeAWang/importance-weighting-interpolating-classifiers)
+- [ICLR 2022 OpenReview](https://openreview.net/forum?id=uqBOne3LUKy)
+- [arXiv](https://arxiv.org/abs/2112.12986)
+- Also appeared at [NeurIPS 2021 DistShift Workshop](https://sites.google.com/view/distshift2021) as a spotlight paper
+
 This repo is created from [lightning-hydra-template](https://github.com/ashleve/lightning-hydra-template).
 Experiment settings are managed by [hydra](https://hydra.cc/), a hierarchical config framework, and the setting files are specified in the `configs/` directory.
 
