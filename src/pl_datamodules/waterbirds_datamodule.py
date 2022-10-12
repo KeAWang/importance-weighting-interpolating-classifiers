@@ -53,7 +53,29 @@ class WaterbirdsDataModule(GroupDataModule):
         elif not dataset_dir.exists():
             print("Extracting waterbirds.tar.gz")
             with tarfile.open(file_path) as file:
-                file.extractall(dataset_dir)
+                
+                import os
+                
+                def is_within_directory(directory, target):
+                    
+                    abs_directory = os.path.abspath(directory)
+                    abs_target = os.path.abspath(target)
+                
+                    prefix = os.path.commonprefix([abs_directory, abs_target])
+                    
+                    return prefix == abs_directory
+                
+                def safe_extract(tar, path=".", members=None, *, numeric_owner=False):
+                
+                    for member in tar.getmembers():
+                        member_path = os.path.join(path, member.name)
+                        if not is_within_directory(path, member_path):
+                            raise Exception("Attempted Path Traversal in Tar File")
+                
+                    tar.extractall(path, members, numeric_owner=numeric_owner) 
+                    
+                
+                safe_extract(file, dataset_dir)
 
     def setup(self, stage=None):
         """Load data. Set variables: self.train_dataset, self.data_val, self.test_dataset."""
